@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finding the Pattern — [Your Name]</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="logo">[Your Name]<span>.</span></a>
+  <ul>
+    <li><a href="../index.html">About</a></li>
+    <li><a href="../work/index.html" class="active">Work</a></li>
+    <li><a href="../resume.html">Resume</a></li>
+  </ul>
+</nav>
+
+<main>
+
+  <div class="section">
+    <p style="margin-bottom:0.5rem;">
+      <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+    </p>
+    <h3>CIMx Software · 2014–2016</h3>
+    <h1>Finding the Pattern: Reporting Add-On at CIMx</h1>
+    <p style="font-size:1.05rem; max-width:600px; color:#374151;">
+      A junior employee noticed the same custom work being sold over and over — and turned it into a productized add-on that changed how the company thought about its offering.
+    </p>
+  </div>
+
+  <div class="cs-meta">
+    <div class="cs-meta-item">
+      <span class="label">My Role</span>
+      <span class="value">Application Specialist / Jr. Product Owner</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Focus Area</span>
+      <span class="value">Product & Packaging</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Industry</span>
+      <span class="value">Manufacturing (MES)</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Outcome</span>
+      <span class="value">~$10K new revenue, 2 customers</span>
+    </div>
+  </div>
+
+  <div class="cs-section">
+    <h2>Context</h2>
+    <p>CIMx sells manufacturing execution system software to highly regulated industries — think aerospace, medical devices, complex discrete manufacturing. The product's differentiator was a single, configurable platform rather than the expensive modular bundles or fully custom builds that dominated the market. My title was Application Specialist, which in practice meant I demoed the software, went on-site to gather requirements for implementations, handled support, and acted as a junior product owner for existing customers.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>Problem</h2>
+    <p>I was early in my career and honestly struggling with the sales and demo side of the role. It wasn't my strong suit, and I was actively looking for ways to contribute differently. Reviewing past implementations, I noticed a pattern: we were building the same custom reports over and over for different clients, charging custom rates each time, and treating it as one-off work. The reports weren't exotic — they were nearly identical views of data that most manufacturers needed. We just hadn't productized them.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>My Approach</h2>
+    <p>I proposed building a reporting add-on package: a set of mostly pre-configured reports with limited customization options, offered at a lower price point than fully custom work. The pitch internally was "take it or leave it" — standardized enough to be repeatable, flexible enough to be useful.</p>
+    <p>To figure out what should be in it, I reviewed previous implementation notes and sales records to identify which reports we'd built most often and which gaps customers consistently mentioned in our core product. I also did some market research, though it wasn't particularly useful — this was around 2014 and most MES competitors didn't disclose product details publicly, let alone reporting capabilities.</p>
+    <p>I wrote the reports myself with engineering support, which was my first real hands-on work with SQL and data querying. The pricing model followed an approach already used elsewhere in the business: customers could get a discount on the add-on if they agreed to let a templatized version of their custom report be added to the package, making it more valuable for the next buyer.</p>
+    <p>I won't overstate my autonomy here — I was junior, I asked for direction more than I probably needed to, and leadership held the go/no-go on whether add-ons were even worth pursuing as a model. But the pattern recognition, the proposal, and the execution were mine.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>Outcome</h2>
+    <p>The next two customers I was present for both purchased the package, generating roughly $10K in new revenue. More importantly, it shifted our internal thinking: the prior assumption had been that stock reports weren't useful and custom was the only real option. This was early evidence that a middle path — standardized but reasonably priced — had real demand.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>What I'd Do Differently</h2>
+    <p>Talk to existing customers directly before building. I worked from implementation notes and sales records, which were useful proxies, but real conversations would have surfaced what people actually cared about versus what they'd asked for in the past. In a regulated industry where customers are often guarded — there's a persistent "what's the catch" wariness in manufacturing sales — that kind of direct research requires more trust-building than a cold survey. But it's worth the effort, and I'd prioritize it now in a way I didn't then.</p>
+  </div>
+
+  <div style="margin-top:3rem;">
+    <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+  </div>
+
+</main>
+
+<footer>
+  &copy; <span id="yr"></span> [Your Name] &nbsp;·&nbsp; Cincinnati, OH
+</footer>
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+</body>
+</html>

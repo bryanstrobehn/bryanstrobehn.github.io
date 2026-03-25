@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sequencing the Unsexy Work — [Your Name]</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="logo">[Your Name]<span>.</span></a>
+  <ul>
+    <li><a href="../index.html">About</a></li>
+    <li><a href="../work/index.html" class="active">Work</a></li>
+    <li><a href="../resume.html">Resume</a></li>
+  </ul>
+</nav>
+
+<main>
+
+  <div class="section">
+    <p style="margin-bottom:0.5rem;">
+      <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+    </p>
+    <h3>Roadtrippers · 2020–2022</h3>
+    <h1>Sequencing the Unsexy Work: CarPlay and RV GPS at Roadtrippers</h1>
+    <p style="font-size:1.05rem; max-width:600px; color:#374151;">
+      CarPlay was the most-requested feature on the roadmap — but shipping it meant first convincing leadership to do four things users couldn't see.
+    </p>
+  </div>
+
+  <div class="cs-meta">
+    <div class="cs-meta-item">
+      <span class="label">My Role</span>
+      <span class="value">Project Manager</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Focus Area</span>
+      <span class="value">Roadmap & Delivery</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Platform</span>
+      <span class="value">iOS, Android, Web</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Outcome</span>
+      <span class="value">CarPlay shipped 1 sprint early</span>
+    </div>
+  </div>
+
+  <div class="cs-section">
+    <h2>Context</h2>
+    <p>Roadtrippers helps you plan your next road trip. When I joined, we'd recently been acquired by Togo RV and were looking to deepen the app's value for paying Plus subscribers. I was the project manager, closely embedded with engineering. The team was stable and execution-focused, but had a backlog of foundational technical work that kept getting deprioritized in favor of user-visible features.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>Problem</h2>
+    <p>CarPlay and Android Auto were the most-requested features on our roadmap and leadership wanted them shipped. But the path to CarPlay ran directly through work nobody wanted to talk about: an outdated Mapbox SDK that was underperforming and quietly expensive, a routing architecture that didn't yet support in-motion GPS, and a first RV-specific GPS feature set that needed to ship before the CarPlay integration would make sense.</p>
+    <p>The instinct from leadership was to skip the prerequisites and build toward the shiny thing directly. Engineering knew why that was a bad idea. My job was to translate that gap.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>My Approach</h2>
+    <p>I mapped the full dependency chain and made it legible: Mapbox SDK upgrade first, then routing options at the pre-planning level, then RV GPS v1 for in-motion use, then CarPlay and Android Auto. Four sequential phases, each one unblocking the next.</p>
+    <p>The case for starting with the SDK upgrade was the hardest sell. Leadership's read was essentially: we're already using Mapbox, why spend weeks upgrading before we build anything users can see? The answer was partly technical — the old SDK used inefficient calculation logic that made each routing call more expensive, meaning the longer we waited, the more we'd pay at scale. And building CarPlay on top of an outdated, underperforming SDK would have meant carrying that debt into a high-visibility, complex integration. I wrote up the tradeoffs explicitly, worked through it with the product lead first, and they took it to leadership with a confident, detailed timeline.</p>
+    <p>The timeline itself was built on an estimation process I developed during this project. The old approach translated story points and velocity into dates imprecisely. It didn't account for team composition, planned interruptions, or uncertainty at the project level. The new process did: total points scoped by team or individual, velocity calibrated to that person or pairing, known delays mapped in advance, and a risk modifier percentage set at kickoff and revisited each phase. That last piece forced an explicit conversation at the start of every phase about how well we actually understood the work — rather than discovering that uncertainty mid-sprint.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>What We Built</h2>
+    <p>All four phases shipped in sequence. The iterative approach also turned out to have an unexpected benefit: we learned things in earlier phases that shaped later ones. By the time we reached CarPlay, the team had already worked through routing edge cases, GPS behavior, and RV-specific constraints in ways that would have been much messier to untangle inside a single large integration.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>Outcome</h2>
+    <p>RV GPS became a meaningful driver of Plus subscriber growth and retention — a genuine differentiator, paywalled and positioned as a premium capability. Routing options were a lighter win, more useful as a marketing talking point than a growth lever. The Mapbox upgrade paid off in reduced per-call costs at scale, though that savings was felt gradually rather than in a single headline number.</p>
+    <p>CarPlay shipped roughly a sprint ahead of the original estimate. Not dramatic, but refreshing after a long buildup — and a direct result of the groundwork in earlier phases reducing late-stage surprises.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>What I'd Do Differently</h2>
+    <p>The project went well, honestly. The early friction with leadership resolved once the case was written up clearly, and the sequencing held throughout.</p>
+    <p>If I could rewind one thing: having the estimation process in place from the start rather than developing it mid-project. We lost some time early to less reliable timelines, and the process I landed on was repeatable enough that it should have existed already. I've used it on every complex project since.</p>
+    <p>The broader lesson is one I've carried forward: the most important planning conversations are often about what you're not going to do yet, and what you don't know. The teams that skip that conversation usually end up having it later, under worse conditions.</p>
+  </div>
+
+  <div style="margin-top:3rem;">
+    <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+  </div>
+
+</main>
+
+<footer>
+  &copy; <span id="yr"></span> [Your Name] &nbsp;·&nbsp; Cincinnati, OH
+</footer>
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+</body>
+</html>

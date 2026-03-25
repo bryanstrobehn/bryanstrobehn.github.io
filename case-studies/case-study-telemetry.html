@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Telemetry QA Helper — [Your Name]</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="logo">[Your Name]<span>.</span></a>
+  <ul>
+    <li><a href="../index.html">About</a></li>
+    <li><a href="../work/index.html" class="active">Work</a></li>
+    <li><a href="../resume.html">Resume</a></li>
+  </ul>
+</nav>
+
+<main>
+
+  <div class="section">
+    <p style="margin-bottom:0.5rem;">
+      <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+    </p>
+    <h3>Personal Project · 2024–Present</h3>
+    <h1>Telemetry QA Helper: Surfacing Analytics Events Without DevTools</h1>
+    <p style="font-size:1.05rem; max-width:600px; color:#374151;">
+      A Chrome extension that shows QA engineers and PMs exactly which analytics events fired — and what properties they carried — the moment they happen, without touching DevTools.
+    </p>
+  </div>
+
+  <div class="cs-meta">
+    <div class="cs-meta-item">
+      <span class="label">Type</span>
+      <span class="value">Personal Project</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Format</span>
+      <span class="value">Chrome Extension (Manifest V3)</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Providers</span>
+      <span class="value">GA4, Segment, Mixpanel, Amplitude</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Status</span>
+      <span class="value">[Working prototype — link coming soon]</span>
+    </div>
+  </div>
+
+  <div class="cs-section">
+    <h2>Context</h2>
+    <p>I identified this problem while working as a PM at SideQuest, where validating telemetry was a recurring friction point for me and for QA. Nobody had a clean workflow for it. I built this on my own time as a personal project — SideQuest's production site was my first real test environment, since I knew exactly how the telemetry there was set up and could verify whether the extension was reading it correctly.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>Problem</h2>
+    <p>When a PM or QA engineer wants to verify that a telemetry event fired correctly, the typical workflow goes something like this: open the site, perform the user action, open DevTools, navigate to the network tab, know enough about how the analytics are instrumented to know where to look, find the relevant call, parse it to confirm the event name and properties, then — if you're a PM — copy the event name and go look it up in Mixpanel or wherever. It's slow, it requires a level of technical familiarity most PMs and QA engineers shouldn't need, and it's inconsistent across providers because GA, Segment, Mixpanel, and Amplitude all look different in the network tab.</p>
+    <p>This is especially painful when you're new to a product's telemetry, like a new hire or a contractor, and you haven't memorized the event names yet. Or when QA is validating dozens of interactions across a release and context-switching into DevTools for each one.</p>
+    <p>The idea was simple: compress that entire workflow into "click something, immediately see what fired."</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>What I Did</h2>
+    <p>As with the BPM tool, I started with a planning conversation before writing any code. The first questions were about feasibility and scope: is this tractable? What are the failure modes? Where does coverage break down? That conversation surfaced the most important constraint early: analytics SDKs run in the page's JavaScript context, while Chrome extensions run in an isolated environment. That's not a minor technical detail — it meant the extension couldn't simply "watch" for analytics calls the way you might expect. The architecture had to account for it from the start, using an injected page-context script to hook into the SDK calls directly, a content script to bridge those events into the extension UI, and a service worker to persist captured events across page reloads within a session.</p>
+    <p>The core product decision was to observe real fired telemetry rather than try to predict events from UI structure. No hover analysis, no "expected event" inference from DOM labels, no attempt to reverse-engineer app logic. Just: what did the page actually emit? That keeps the tool trustworthy and the scope manageable. A tool that sometimes shows you what it thinks should have fired is less useful than one that reliably shows you what did.</p>
+    <p>I scoped V1 to the four providers that cover the vast majority of standard implementations: GA4/gtag, Segment, Mixpanel, and Amplitude. Custom wrappers and non-standard implementations are a known gap — supporting them would require a fundamentally different approach and would blow out the MVP. I documented that tradeoff explicitly rather than pretending the coverage was universal.</p>
+    <p>For format, a Chrome extension was the right call. It lives where QA work already happens, works on any site without requiring the product team to build custom internal tooling, and keeps non-engineers from needing to touch DevTools at all. A standalone web app would have required the user to leave their context. That's the wrong tradeoff for a workflow tool.</p>
+    <p>I tested first on SideQuest's production site, then expanded to other sites, diagnosing failures as I went. Coverage was roughly 50% across a broad range of sites — strong on standard implementations, weaker where SDKs were wrapped or invoked non-standardly. That's an acceptable V1 result and a clear direction for follow-on work.</p>
+    <p>The development process itself is worth noting. This was my first time working in an IDE and with GitHub in any serious way since college. [Placeholder — expand on the Claude to Codex to local workflow here, what you learned about merge conflicts, working without a team, etc.]</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>Outcome</h2>
+    <p>[Placeholder — describe current working state of the extension: what it captures, what the UI looks like, where it's hosted or how to install it.]</p>
+    <p>The V1 answers the core question: did the event fire, what was it called, and what properties did it carry? That's enough to meaningfully reduce the DevTools dependency for basic telemetry QA. The longer-term opportunity is more interesting: moving from "what fired?" to "did the right thing fire?" — validation against a tracking plan or expected schema rather than just observation. That's a different product, but the foundation is there.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>Known Limitations</h2>
+    <p>Only standard SDK implementations are reliably supported — custom wrappers, non-standard invocation patterns, and some queue/replay behaviors fall outside current coverage. The extension captures client-side calls only; it's not a network inspector and doesn't touch server-side telemetry or data pipeline validation. The overlay UI is functional but not polished, and can occasionally conflict with site UI on pages with aggressive z-index or fixed positioning. These are all documented, expected tradeoffs for a first working version.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>What I'd Do Differently</h2>
+    <p>Start with user research before building, even for a personal project. I knew the problem from my own experience, but I don't actually know yet whether the specific workflow I built matches how QA engineers think about the problem — or whether the overlay UI is the right surface at all. I have hypotheses. Testing them against real users is the next step, not an afterthought.</p>
+    <p>The development workflow took longer to stabilize than it needed to. Starting in Claude, moving to Codex for a more structured implementation, then switching to a local AI assistant when cloud-based git merges became unmanageable — each transition cost time. [Placeholder — more reflection on the toolchain and what you'd standardize earlier.]</p>
+    <p>I'd also define success metrics before shipping, even for a prototype. I have a sense of what good looks like (QA can verify an event without opening DevTools), but I didn't instrument the extension itself to know whether people are actually using it that way.</p>
+  </div>
+
+  <div style="margin-top:3rem;">
+    <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+  </div>
+
+</main>
+
+<footer>
+  &copy; <span id="yr"></span> [Your Name] &nbsp;·&nbsp; Cincinnati, OH
+</footer>
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+</body>
+</html>
