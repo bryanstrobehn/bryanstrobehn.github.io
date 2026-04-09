@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Work — Bryan Strobehn</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .work-filters {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-btn {
+      background: none;
+      border: 2px solid var(--border);
+      border-radius: 0;
+      padding: 0.4rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .filter-btn:hover { border-color: var(--navy); color: var(--navy); }
+    .filter-btn.active { background: var(--navy); border-color: var(--navy); color: var(--cream); }
+
+    .sort-select {
+      margin-left: auto;
+      background: none;
+      border: 2px solid var(--border);
+      border-radius: 0;
+      padding: 0.4rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: var(--font-body);
+    }
+
+    .tile-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .tile-card {
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: 0;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.2s;
+    }
+    .tile-card:hover {
+      border-color: var(--accent);
+    }
+    .tile-card.hidden { display: none; }
+    .tile-card.soon {
+      opacity: 0.45;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .tile-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--navy-mid);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .tile-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    .tile-body {
+      padding: 1.25rem 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .tile-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.4rem;
+    }
+    .tile-card[data-type="personal"] .tile-label {
+      color: var(--text-muted);
+    }
+    .tile-card h2 {
+      font-size: 1rem;
+      line-height: 1.35;
+      margin-bottom: 0.5rem;
+      color: var(--navy);
+    }
+    .tile-card p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin: 0;
+      flex: 1;
+    }
+
+    .show-more-wrap {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .show-more-btn {
+      background: none;
+      border: 2px solid var(--navy);
+      border-radius: 0;
+      padding: 0.7rem 2rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--navy);
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: background 0.15s, color 0.15s;
+    }
+    .show-more-btn:hover { background: var(--navy); color: var(--cream); }
+    .show-more-wrap.hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="logo">Bryan Strobehn</a>
+  <ul>
+    <li><a href="../index.html">About</a></li>
+    <li><a href="index.html" class="active">Case Studies</a></li>
+    <li><a href="../projects/index.html">Personal Projects</a></li>
+    <li><a href="../resume.html">Resume</a></li>
+  </ul>
+</nav>
+
+<main>
+
+  <div class="section">
+    <h3>Case Studies</h3>
+    <h1>Selected Work</h1>
+    <p style="max-width:520px; color:var(--text-muted);">
+      A few projects that show how I think, from framing the problem to shipping and measuring the outcome.
+    </p>
+  </div>
+
+  <div class="work-filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="work">Work</button>
+    <button class="filter-btn" data-filter="personal">Personal</button>
+    <select class="sort-select" id="sort-select">
+      <option value="default">Sort: Default</option>
+      <option value="recent">Sort: Recent</option>
+      <option value="oldest">Sort: Oldest</option>
+    </select>
+  </div>
+
+  <div class="tile-grid" id="tile-grid">
+
+    <a href="../case-studies/case-study-meta-affiliate.html" class="tile-card" data-type="work" data-year="202512">
+      <div class="tile-thumb">
+        <img src="../assets/meta-affiliate-card.png" alt="">
+      </div>
+      <div class="tile-body">
+        <div class="tile-label">SideQuest VR · 2025</div>
+        <h2>Saying No to Revenue: Meta Affiliate Links at SideQuest</h2>
+        <p>How a structured pilot turned a "no-brainer" revenue opportunity into a clear no.</p>
+      </div>
+    </a>
+
+    <a href="../case-studies/case-study-ad-slots.html" class="tile-card" data-type="work" data-year="202509">
+      <div class="tile-thumb">
+        <img src="../assets/ad-card-image.png" alt="">
+      </div>
+      <div class="tile-body">
+        <div class="tile-label">SideQuest VR · 2025</div>
+        <h2>From Bugs to Revenue: Ad Slot Experiments at SideQuest</h2>
+        <p>Two bug reports that turned into CTR lifts of 41–80% and 0.05% to 1.0%.</p>
+      </div>
+    </a>
+
+    <a href="../case-studies/case-study-indie-alliance.html" class="tile-card" data-type="work" data-year="202511">
+      <div class="tile-thumb">
+        <img src="../assets/alliance-card-image.png" alt="">
+      </div>
+      <div class="tile-body">
+        <div class="tile-label">SideQuest VR · 2025</div>
+        <h2>Indie Alliance: Validating a Community-Led Revenue Model</h2>
+        <p>How a free v0 with nothing to sell became the foundation for 25K new community members.</p>
+      </div>
+    </a>
+
+    <a href="../case-studies/case-study-sideloading.html" class="tile-card" data-type="work" data-year="202506">
+      <div class="tile-thumb">
+        <img src="../assets/sideload-card-image.png" alt="">
+      </div>
+      <div class="tile-body">
+        <div class="tile-label">SideQuest VR · 2025</div>
+        <h2>Owning Our Core: The Sideloading Overhaul at SideQuest</h2>
+        <p>A ground-up rethink of SideQuest's most foundational feature.</p>
+      </div>
+    </a>
+
+    <a href="../case-studies/case-study-catalogue.html" class="tile-card" data-type="work" data-year="202601">
+      <div class="tile-thumb">
+        <img src="../assets/aggregation-card-image.png" alt="">
+      </div>
+      <div class="tile-body">
+        <div class="tile-label">SideQuest VR · 2026</div>
+        <h2>Building the Foundation: Cross-Store Catalogue Integration</h2>
+        <p>Turning a broad top-down mandate into a scoped Phase 1 grounded in user research.</p>
+      </div>
+    </a>
+
+    <a href="../case-studies/case-study-carplay.html" class="tile-card" data-type="work" data-year="202105">
+      <div class="tile-thumb">
+        <img src="../assets/rv-gps-1.png" alt="">
+      </div>
+      <div class="tile-body">
+        <div class="tile-label">Roadtrippers · 2021</div>
+        <h2>The Long Way Was The Right Way: CarPlay and RV GPS at Roadtrippers</h2>
+        <p>Convincing leadership to do four things users couldn't see — so that the one thing they were asking for could actually ship well.</p>
+      </div>
+    </a>
+
+    <a href="../case-studies/case-study-cimx-reporting.html" class="tile-card" data-type="work" data-year="201701">
+      <div class="tile-thumb">
+        <img src="../assets/cimx-card-image.png" alt="">
+      </div>
+      <div class="tile-body">
+        <div class="tile-label">CIMx Software · 2017</div>
+        <h2>Finding the Pattern: Reporting Add-On at CIMx</h2>
+        <p>Noticing that the same custom work kept getting sold over and over — and productizing it.</p>
+      </div>
+    </a>
+
+    <a href="../case-studies/case-study-bpm.html" class="tile-card" data-type="personal" data-year="202604">
+      <div class="tile-thumb">
+        <img src="../assets/aggregation-card-image.png" alt="">
+      </div>
+      <div class="tile-body">
+        <div class="tile-label">Personal Project · 2026</div>
+        <h2>BPM Finder: Building a Music Analysis Tool</h2>
+        <p>A narrow workflow problem turned prototyping vehicle.</p>
+      </div>
+    </a>
+
+    <a href="../case-studies/case-study-poop-tracker.html" class="tile-card" data-type="personal" data-year="202603">
+      <div class="tile-thumb">
+        <img src="../assets/poop-card.png" alt="">
+      </div>
+      <div class="tile-body">
+        <div class="tile-label">Personal Project · 2026</div>
+        <h2>Poop Tracker: A Private, Offline Health Logging Tool</h2>
+        <p>The pediatrician needed data. Every existing app wanted to store it in the cloud. That was a non-starter.</p>
+      </div>
+    </a>
+
+    <a href="../case-studies/case-study-grab.html" class="tile-card" data-type="personal" data-year="202604">
+      <div class="tile-thumb">
+                <img src="../assets/grab-card.png" alt="">
+      </div>
+      <div class="tile-body">
+        <div class="tile-label">Personal Project · 2026</div>
+        <h2>Grab</h2>
+        <p>A screen recorder built in one conversation because every other option was too much.</p>
+      </div>
+    </a>
+
+    <a href="../case-studies/case-study-convert-stuff.html" class="tile-card" data-type="personal" data-year="202603">
+      <div class="tile-thumb">
+        <span style="font-size:3rem; display:flex; align-items:center; justify-content:center; height:100%;">🔄</span>
+      </div>
+      <div class="tile-body">
+        <div class="tile-label">Personal Project · 2026</div>
+        <h2>Convert Stuff</h2>
+        <p>FFmpeg in the browser. No server, no uploads, no ads. Drop a file, get a file back.</p>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="show-more-wrap" id="show-more-wrap">
+    <button class="show-more-btn" id="show-more-btn">Show More</button>
+  </div>
+
+</main>
+
+<footer>
+  &copy; <span id="yr"></span> Bryan Strobehn &nbsp;·&nbsp; Cincinnati, OH
+</footer>
+<script>
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  const grid = document.getElementById('tile-grid');
+  const showMoreWrap = document.getElementById('show-more-wrap');
+  const showMoreBtn = document.getElementById('show-more-btn');
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  const sortSelect = document.getElementById('sort-select');
+
+  let currentFilter = 'all';
+  const INITIAL_VISIBLE = 6;
+
+  function getCards() {
+    return Array.from(grid.querySelectorAll('.tile-card:not(.soon)'));
+  }
+
+  // Snapshot default order before any sorting mutates the DOM
+  const defaultOrder = getCards();
+
+  function applyFilterAndSort() {
+    const cards = getCards();
+
+    // Sort
+    const sortVal = sortSelect.value;
+    if (sortVal === 'recent') {
+      cards.sort((a, b) => parseInt(b.dataset.year) - parseInt(a.dataset.year));
+    } else if (sortVal === 'oldest') {
+      cards.sort((a, b) => parseInt(a.dataset.year) - parseInt(b.dataset.year));
+    } else {
+      cards.sort((a, b) => defaultOrder.indexOf(a) - defaultOrder.indexOf(b));
+    }
+    cards.forEach(c => grid.appendChild(c));
+
+    // Filter + show/hide
+    let visible = 0;
+    cards.forEach(card => {
+      const matchesFilter = currentFilter === 'all' || card.dataset.type === currentFilter;
+      if (!matchesFilter) {
+        card.classList.add('hidden');
+      } else {
+        visible++;
+        if (visible <= INITIAL_VISIBLE) {
+          card.classList.remove('hidden');
+          card.dataset.extraHidden = 'false';
+        } else {
+          card.classList.add('hidden');
+          card.dataset.extraHidden = 'true';
+        }
+      }
+    });
+
+    const hasMore = cards.some(c => c.dataset.extraHidden === 'true');
+    showMoreWrap.classList.toggle('hidden', !hasMore);
+    showMoreBtn.textContent = 'Show More';
+  }
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      applyFilterAndSort();
+    });
+  });
+
+  sortSelect.addEventListener('change', applyFilterAndSort);
+
+  showMoreBtn.addEventListener('click', () => {
+    const hidden = getCards().filter(c => c.dataset.extraHidden === 'true');
+    hidden.forEach(c => {
+      c.classList.remove('hidden');
+      c.dataset.extraHidden = 'false';
+    });
+    showMoreWrap.classList.add('hidden');
+  });
+
+  applyFilterAndSort();
+</script>
+</body>
+</html>

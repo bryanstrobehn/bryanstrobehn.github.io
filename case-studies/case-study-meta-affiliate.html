@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Saying No to Revenue — Bryan Strobehn</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="logo">Bryan Strobehn</a>
+  <ul>
+    <li><a href="../index.html">About</a></li>
+    <li><a href="../work/index.html" class="active">Case Studies</a></li>
+    <li><a href="../projects/index.html">Personal Projects</a></li>
+    <li><a href="../resume.html">Resume</a></li>
+  </ul>
+</nav>
+
+<main>
+
+  <div class="section">
+    <p style="margin-bottom:0.5rem;">
+      <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+    </p>
+    <h3>SideQuest VR · 2025</h3>
+    <h1>Saying No to Revenue: Meta Affiliate Links at SideQuest</h1>
+    <p style="font-size:1.05rem; max-width:600px; color:#374151;">
+      A structured pilot to evaluate Meta's affiliate program revealed UX and brand risks that outweighed the revenue.
+    </p>
+  </div>
+
+  <div class="cs-meta">
+    <div class="cs-meta-item">
+      <span class="label">My Role</span>
+      <span class="value">Product Manager</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Focus Area</span>
+      <span class="value">Monetization</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Pilot Duration</span>
+      <span class="value">2 weeks</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Platform</span>
+      <span class="value">Web (browser)</span>
+    </div>
+  </div>
+
+  <div class="cs-section">
+    <h2>Context</h2>
+    <p>SideQuest is a leading discovery platform for VR gamers and indie developers: scrappy by nature, and deeply trusted by a privacy-conscious user base. The platform started as a simpler way to get apps onto your Quest headset, but many users are less than happy with Meta itself. As PM, I owned monetization exploration alongside the roadmap, at a time when the company was actively searching for sustainable revenue streams.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>Problem</h2>
+    <p>Meta's affiliate program looked like a no-brainer on paper. SideQuest already linked out to the Meta store at the highest-intent moment in our download flow and was a natural conversion point. Affiliate links would monetize clicks we were already sending for free. Leadership and marketing were enthusiastic. I was too, at first.</p>
+    <p>But one of our engineers raised a specific concern early: affiliate redirect links are exactly the kind of thing aggressive adblockers flag. Our users skew technical and privacy-minded. If a non-trivial percentage of them hit a broken flow — or worse, a "dangerous site" warning — at the most critical moment in their journey, we'd be damaging the experience for our most engaged users in exchange for incremental revenue. That concern didn't kill the idea, but it was specific enough that I didn't want to proceed without testing it.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>My Approach</h2>
+    <p>Rather than greenlight or kill it on instinct, we ran a structured pilot to answer the questions that actually mattered: Does it work technically? What does it break, and for whom? Is the revenue worth it?</p>
+    <p>A few deliberate scoping decisions shaped the experiment. First, our telemetry had a gap right at the relevant point in the flow, so we fixed that before running anything — I didn't want to make a call on incomplete data. Second, SideQuest runs across a browser, an Electron desktop app, and an in-headset VR browser: three environments with different adblocker behavior. I scoped the pilot to browser-only to limit variables and keep findings clean. Third, I worked with our Data team to select a mix of high- and low-traffic apps so the revenue projection would be representative, not cherry-picked.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>What We Found</h2>
+    <p>The two-week experiment confirmed the engineer's concern, and then some. Depending on adblocker intensity, users either experienced significant slowdown in the download flow, got a "malicious site" warning mid-redirect, or had the link blocked entirely with no explanation. The affiliate partner's tracking also failed intermittently on their end, meaning some users who clicked through and tried to use a discount code got an error at the Meta store — outside our control, but our users wouldn't know that. It would just look like SideQuest sent them somewhere broken.</p>
+    <p>The revenue forecast came in between $9K–$17K annually, depending on a few variables. Not zero, but not transformative either, and well below what leadership had initially estimated.</p>
+    <p>I brought the full picture to a senior leadership standup: the revenue range, UX screenshots from internal testing, and the brand risk framing. SideQuest's credibility is built on being a trustworthy, indie-friendly alternative to Meta's walled garden. Injecting affiliate tracking links that visibly broke for privacy-conscious users cut against that identity in a way that felt hard to recover from. It wasn't what we wanted to hear, but we made a unified decision not to roll it out.</p>
+    <p>However, I couldn't help but wonder if there was an alternative. I asked design to spec out a different UX: an optional "use this link to support SideQuest" button alongside the existing CTA, clearly positioned as voluntary. That version hides nothing, fits the platform's underdog brand, and is fully designed and sized by engineering if we ever want to revisit.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>Outcome</h2>
+    <p>The affiliate program was shelved. The download flow stayed clean. And we avoided a scenario where our most loyal users — the ones most likely to hit adblocker issues — would have had the worst experience.</p>
+    <p>The harder outcome to quantify: leadership's trust in the evaluation process. Coming in with data, visuals, a clear risk framing, and a preserved path forward made a "no" recommendation land very differently than it would have otherwise.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>What I'd Do Differently</h2>
+    <p>I'd push harder to run the optional "support SideQuest" variant as a follow-on experiment rather than leaving it on the shelf. The brand positioning (transparent, opt-in, community-framed) actually fits SideQuest's identity well. It might have changed the math. I didn't push hard enough to find out.</p>
+  </div>
+
+  <div style="margin-top:3rem;">
+    <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+  </div>
+
+</main>
+
+<footer>
+  &copy; <span id="yr"></span> Bryan Strobehn &nbsp;·&nbsp; Cincinnati, OH
+</footer>
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bryan Strobehn — Product Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Bryan Strobehn</a>
+  <ul>
+    <li><a href="index.html" class="active">About</a></li>
+    <li><a href="work/index.html">Case Studies</a></li>
+    <li><a href="projects/index.html">Personal Projects</a></li>
+    <li><a href="resume.html">Resume</a></li>
+  </ul>
+</nav>
+
+<main>
+
+  <!-- ── Hero ── -->
+  <div class="hero section">
+    <div>
+      <p class="hero-eyebrow">Product Manager</p>
+      <h1>Bryan Strobehn</h1>
+      <p class="hero-location">📍 Cincinnati, OH</p>
+      <p style="margin-top:1.5rem; font-size:1.05rem; max-width:540px;">
+        I'm a product manager with 10 years of experience across VR, travel tech, and manufacturing software. I'm drawn to the messy middle where user needs, business constraints, and technical reality collide. I turn ambiguity into priorities and priorities into shipped product.
+      </p>
+      <div style="display:flex; gap:1rem; margin-top:2rem; flex-wrap:wrap;">
+        <a href="work/index.html" class="resume-cta">Case Studies</a>
+        <a href="projects/index.html" class="resume-cta">Personal Projects</a>
+        <a href="resume.html" class="resume-cta">Resume</a>
+      </div>
+    </div>
+    <img src="./assets/bryan%20portrait.png" alt="Bryan Strobehn" class="hero-photo"
+         onerror="this.style.display='none'" />
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ── Hobbies ── -->
+  <div class="section">
+    <h3>Personal Life</h3>
+    <p style="margin-bottom:1rem; max-width:540px; color:var(--text-muted); font-size:0.9rem;">
+      Find me outside, making something, or wrangling kids.
+    </p>
+    <div class="tags">
+      <span class="tag">🎵 Music Production</span>
+      <span class="tag">🌿 Plants &amp; Making Things</span>
+      <span class="tag">🏕️ Camping &amp; Adventure</span>
+      <span class="tag">🎮 Gaming</span>
+      <span class="tag">👨‍👧‍👦 Dad</span>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  &copy; <span id="yr"></span> Bryan Strobehn &nbsp;·&nbsp; Cincinnati, OH
+</footer>
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+</body>
+</html>

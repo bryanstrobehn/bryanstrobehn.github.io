@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Poop Tracker — Bryan Strobehn</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="logo">Bryan Strobehn</a>
+  <ul>
+    <li><a href="../index.html">About</a></li>
+    <li><a href="../work/index.html" class="active">Case Studies</a></li>
+    <li><a href="../projects/index.html">Personal Projects</a></li>
+    <li><a href="../resume.html">Resume</a></li>
+  </ul>
+</nav>
+
+<main>
+
+  <div class="section">
+    <p style="margin-bottom:0.5rem;">
+      <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+    </p>
+    <h3>Personal Project · 2026</h3>
+    <h1>Poop Tracker: A Private, Offline-First Health Logging Tool</h1>
+    <p style="font-size:1.05rem; max-width:600px; color:#374151;">
+      Yes, really. A pediatrician needed data. Every app that could collect it wanted to store it in the cloud. That was a non-starter.
+    </p>
+  </div>
+
+  <div class="cs-meta">
+    <div class="cs-meta-item">
+      <span class="label">Type</span>
+      <span class="value">Personal Project</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Stack</span>
+      <span class="value">Vanilla JS, localStorage, IndexedDB</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Status</span>
+      <span class="value">Used, complete</span>
+    </div>
+  </div>
+
+  <div class="cs-cta">
+    <span class="cs-cta-label">LIVE PROJECT</span>
+    <a href="../projects/poop-tracker.html" class="cs-cta-btn">Try Poop Tracker →</a>
+  </div>
+
+  <div class="cs-section">
+    <h2>Context</h2>
+    <p>Our pediatrician asked us to track bowel movements over a two-week window using the Bristol Stool Chart, including photos when things looked unusual. A completely reasonable medical request. Slightly less reasonable to explain at dinner parties.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>Problem</h2>
+    <p>Every app I found required an account and cloud storage. I wasn't putting photos of my kid's poop in a random startup's database — full stop. The privacy constraint wasn't negotiable, which meant the entire category of "just use an existing app" was off the table.</p>
+    <p>What I actually needed was a logging form that worked on a phone, stored everything locally, and could produce something a doctor could look at. Google Forms/Docs would have worked fine, but I'd been on a vibe coding streak and figured this would be an interesting experiment.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>What I Built</h2>
+    <p>Before writing any code I scoped it as a single-file browser app. The architecture question was straightforward: localStorage for structured metadata (timestamps, Bristol type, color, notes) and IndexedDB for photos, keeping everything on-device. Rather than try to build sync, I designed around a deliberate manual export/import flow — you generate a JSON bundle on mobile and import it on desktop. That kept the architecture simple and made the privacy story clean. No sync server to reason about, no tokens to manage.</p>
+    <p>The mobile view is a logging form: Bristol type picker (1–7, with plain-language descriptions), color swatches, optional camera capture, and a notes field. The desktop view handles import, browsing the full log, and generating a PDF summary report. No backend, no accounts, no data leaves the device.</p>
+    <p>The report was handed directly to the pediatrician, who did not ask how it was made.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>Outcome</h2>
+    <p>Used it through the full two-week tracking window. It worked. We don't need to discuss the findings.</p>
+    <p>More practically: the pediatrician got a clean, readable report. The data never touched a third-party server. The whole thing took an hour to build, and made it more fun. That's about as good as a ratio gets for a project like this.</p>
+     <p>Technically anyone can use it -- just download the HTML and uh... have at it? Just don't tell me about it.</p>
+ </div>
+
+      <img src="../assets/poop-sync.png" alt="" class="cs-header-img" id="cs-header-img">
+ 
+  <div class="cs-section">
+    <h2>What I'd Do Differently</h2>
+    <p>The photo storage architecture needed a mid-stream refactor when localStorage hit its 5MB cap — something I should have anticipated earlier. The split between localStorage and IndexedDB was the right call, but I didn't think through the size constraints carefully enough before starting, which meant revisiting architecture after I was already in the middle of building. A five-minute capacity calculation upfront would have saved it.</p>
+    <p>I'd also add entry editing from the start rather than waiting to see if I needed it. This required a bit of manual re-entry but wasn't a huge deal at the end of the day. </p>
+  </div>
+
+  <div style="margin-top:3rem;">
+    <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+  </div>
+
+</main>
+
+<footer>
+  &copy; <span id="yr"></span> Bryan Strobehn &nbsp;·&nbsp; Cincinnati, OH
+</footer>
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+</body>
+</html>

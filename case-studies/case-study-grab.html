@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grab — Bryan Strobehn</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="logo">Bryan Strobehn</a>
+  <ul>
+    <li><a href="../index.html">About</a></li>
+    <li><a href="../work/index.html" class="active">Case Studies</a></li>
+    <li><a href="../projects/index.html">Personal Projects</a></li>
+    <li><a href="../resume.html">Resume</a></li>
+  </ul>
+</nav>
+
+<main>
+
+         <img src="../assets/grab-wider.png" alt="" class="cs-header-img" id="cs-header-img">
+
+
+  <div class="section">
+    <p style="margin-bottom:0.5rem;">
+      <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+    </p>
+    <h3>Personal Project · 2026</h3>
+    <h1>Grab</h1>
+    <p style="font-size:1.05rem; max-width:600px; color:#374151;">
+      A screen recorder that exists because every other option was too much. Single file, no account, opens instantly.
+    </p>
+  </div>
+
+  <div class="cs-meta">
+    <div class="cs-meta-item">
+      <span class="label">Type</span>
+      <span class="value">Personal Project</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Stack</span>
+      <span class="value">Vanilla JS, Screen Capture API</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Status</span>
+      <span class="value">Live</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Method</span>
+      <span class="value">AI-assisted prototyping (vibe coding)</span>
+    </div>
+  </div>
+
+  <div class="cs-cta">
+    <span class="cs-cta-label">LIVE PROJECT</span>
+    <a href="../projects/grab.html" class="cs-cta-btn">Try Grab →</a>
+  </div>
+
+  <div class="cs-section">
+    <h2>How It Started</h2>
+    <p>I was trying to show my friends a visual effect I'd built into my BPM app — the color of the whole interface shifts as you move your mouse around the page. Easier to show than describe. I needed to record my screen for maybe fifteen seconds and send it to a group chat.</p>
+    <p>That's when I realized I had no good way to do it. Windows doesn't have a built-in screen recorder worth using. Loom exists but it wants your face on camera and an account and a whole thing. Everything else I could think of was either a sketchy download or way more than I needed.</p>
+    <p>I'll admit this was a curiosity moment borne from a vibe coding dopamine hit. But now it's a real thing. Yay?</p>
+    <p>So I asked Claude to build one. Same conversation, right then.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>What It Is</h2>
+    <p>Grab is a single HTML file. You open it in Chrome, click the button, pick what to share, record, stop, save. The file lands in your downloads and you drag it into whatever chat you're already in. No account, no upload, no install.</p>
+    <p>I used it thirty seconds after it existed to send that exact demo to my friends.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>The Part That Stuck</h2>
+    <p>I've used it more than anything else I've built. The constraint ended up being the point — it does one thing and opens instantly because there's nothing else to open.</p>
+    <p>The irony is the first thing I recorded with it was a session of me vibe coding. Which I sent to the people I'd been telling about vibe coding. They got it immediately.</p>
+  </div>
+
+  <div style="margin-top:3rem;">
+    <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+  </div>
+
+</main>
+
+<footer>
+  &copy; <span id="yr"></span> Bryan Strobehn &nbsp;·&nbsp; Cincinnati, OH
+</footer>
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+</body>
+</html>

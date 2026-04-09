@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>💩 Poop Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600&display=swap');
+
+  :root {
+    --bg: #FFF8F0;
+    --card: #FFFFFF;
+    --brown-deep: #6B3A2A;
+    --brown-mid: #A0522D;
+    --brown-light: #D4956A;
+    --cream: #F5E6D3;
+    --cream-dark: #EDD5BC;
+    --accent: #FF8C42;
+    --accent-soft: #FFB380;
+    --green: #7CB87C;
+    --red: #E07070;
+    --yellow: #F0C040;
+    --text: #3D2010;
+    --text-mid: #7A4F35;
+    --text-soft: #B08060;
+    --border: #E8D5C0;
+    --shadow: 0 2px 12px rgba(107,58,42,0.10);
+    --shadow-lg: 0 6px 24px rgba(107,58,42,0.15);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── TABS ── */
+  .tab-bar {
+    display: flex;
+    background: var(--brown-deep);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 14px 8px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.55);
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .tab-btn.active {
+    color: #fff;
+    background: rgba(255,255,255,0.12);
+    border-bottom: 3px solid var(--accent);
+  }
+  .tab-btn:hover:not(.active) { color: rgba(255,255,255,0.8); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── SHARED ── */
+  .page { max-width: 480px; margin: 0 auto; padding: 20px 16px 80px; }
+  .page.wide { max-width: 900px; }
+
+  .page-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--brown-deep);
+    margin-bottom: 4px;
+  }
+  .page-sub {
+    color: var(--text-soft);
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-family: 'Nunito', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-soft);
+    margin-bottom: 10px;
+  }
+
+  /* ── FORM ELEMENTS ── */
+  .field { margin-bottom: 18px; }
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-mid);
+    margin-bottom: 6px;
+  }
+  input[type="date"], input[type="time"], textarea, select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input[type="date"]:focus, input[type="time"]:focus,
+  textarea:focus, select:focus {
+    border-color: var(--brown-light);
+  }
+  textarea { resize: vertical; min-height: 70px; }
+
+  /* ── BRISTOL PICKER ── */
+  .bristol-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  @media (max-width: 380px) {
+    .bristol-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  .bristol-item {
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--bg);
+    user-select: none;
+  }
+  .bristol-item:hover { border-color: var(--brown-light); background: var(--cream); }
+  .bristol-item.selected {
+    border-color: var(--accent);
+    background: #FFF0E6;
+    box-shadow: 0 0 0 3px rgba(255,140,66,0.18);
+  }
+  .bristol-poop { font-size: 28px; line-height: 1; margin-bottom: 4px; }
+  .bristol-num {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 13px;
+    color: var(--brown-deep);
+  }
+  .bristol-desc {
+    font-size: 9px;
+    color: var(--text-soft);
+    line-height: 1.2;
+    margin-top: 2px;
+  }
+
+  /* ── COLOR SWATCHES ── */
+  .color-grid {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .color-swatch {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .color-swatch:hover { transform: scale(1.12); }
+  .color-swatch.selected {
+    border-color: var(--brown-deep);
+    box-shadow: 0 0 0 3px rgba(107,58,42,0.25);
+  }
+  .color-swatch span {
+    position: absolute;
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    white-space: nowrap;
+    color: var(--text-soft);
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+  }
+  .color-swatch:hover span, .color-swatch.selected span { opacity: 1; }
+
+  /* ── PHOTO ── */
+  .photo-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .photo-btn {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+  }
+  .photo-btn:hover { border-color: var(--brown-light); background: var(--cream); }
+  .photo-btn input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .photo-btn .ph-icon { font-size: 24px; margin-bottom: 4px; }
+  .photo-btn .ph-text { font-size: 12px; color: var(--text-soft); font-weight: 600; }
+  .photo-preview {
+    margin-top: 10px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    position: relative;
+  }
+  .photo-preview img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    display: block;
+    border-radius: var(--radius-sm);
+  }
+  .photo-remove {
+    position: absolute; top: 6px; right: 6px;
+    background: rgba(0,0,0,0.55); color: #fff;
+    border: none; border-radius: 50%;
+    width: 26px; height: 26px;
+    font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 22px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    width: 100%;
+    justify-content: center;
+    font-size: 16px;
+    padding: 14px;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(255,140,66,0.35);
+  }
+  .btn-primary:hover { background: #e67a30; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary {
+    background: var(--cream);
+    color: var(--brown-deep);
+    border: 1.5px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--cream-dark); }
+  .btn-danger {
+    background: #FFF0F0;
+    color: var(--red);
+    border: 1.5px solid #F0C0C0;
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
+  /* ── SUCCESS TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--brown-deep);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: var(--shadow-lg);
+    z-index: 999;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── LOG ENTRIES ── */
+  .entry-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    margin-bottom: 12px;
+  }
+  .entry-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .entry-date {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-mid);
+  }
+  .entry-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--cream);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--brown-deep);
+    font-family: 'Nunito', sans-serif;
+  }
+  .entry-color-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .entry-notes {
+    font-size: 13px;
+    color: var(--text-mid);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .entry-photo {
+    margin-top: 10px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .entry-photo img {
+    width: 100%;
+    max-height: 180px;
+    object-fit: cover;
+    display: block;
+  }
+  .entry-actions { margin-top: 10px; display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* ── DESKTOP STATS ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .stat-num {
+    font-family: 'Nunito', sans-serif;
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--brown-deep);
+    line-height: 1;
+  }
+  .stat-label { font-size: 11px; color: var(--text-soft); font-weight: 600; margin-top: 4px; }
+
+  /* ── IMPORT ZONE ── */
+  .import-zone {
+    border: 2px dashed var(--brown-light);
+    border-radius: var(--radius);
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--cream);
+    position: relative;
+  }
+  .import-zone:hover { background: var(--cream-dark); border-color: var(--brown-mid); }
+  .import-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+  .import-zone .iz-icon { font-size: 36px; margin-bottom: 8px; }
+  .import-zone .iz-text { font-family: 'Nunito', sans-serif; font-weight: 700; color: var(--brown-mid); font-size: 15px; }
+  .import-zone .iz-sub { font-size: 12px; color: var(--text-soft); margin-top: 4px; }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .filter-bar select, .filter-bar input {
+    flex: 1;
+    min-width: 120px;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-soft);
+  }
+  .empty-state .es-icon { font-size: 56px; margin-bottom: 12px; }
+  .empty-state .es-text { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 16px; color: var(--text-mid); }
+  .empty-state .es-sub { font-size: 13px; margin-top: 4px; }
+
+  /* ── DESKTOP LAYOUT ── */
+  @media (min-width: 700px) {
+    .desktop-two-col {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+  }
+
+  .export-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  /* ── BLURB BAR ── */
+  .blurb-bar {
+    margin: 8px auto 0;
+    padding: 0 16px;
+    font-size:11px;
+    color:var(--text-soft);
+  }
+  .blurb-bar > *, .blurb-bar {
+    /* applied inline via wrapper div */
+  }
+
+  /* ── HEADER LOGO ── */
+  .app-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 16px 0;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .app-header.wide { max-width: 900px; }
+  .app-logo { font-size: 36px; }
+  .app-title-block {}
+  .app-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--brown-deep);
+    line-height: 1;
+  }
+  .app-subtitle { font-size: 12px; color: var(--text-soft); }
+</style>
+</head>
+<body>
+<!-- ── Project Nav ── -->
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body { padding-top: 44px; }
+  #pnav { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 1.25rem; background: #1c1c1e; border-bottom: 2px solid #2e2e32; font-family: 'Space Grotesk', system-ui, sans-serif; }
+  #pnav-back { font-size: 0.8rem; font-weight: 500; letter-spacing: 0.01em; color: #8e8e96; text-decoration: none; transition: color 0.12s; }
+  #pnav-back:hover { color: #e8e8ea; }
+  #pnav-btn { background: none; border: 1.5px solid #2e2e32; border-radius: 3px; color: #6e6e76; cursor: pointer; padding: 5px 7px; line-height: 0; transition: color 0.12s, border-color 0.12s, background 0.12s; }
+  #pnav-btn:hover, #pnav-btn.open { color: #e0e0e4; border-color: #4e4e54; background: #28282c; }
+  #pnav-pop { position: fixed; top: 48px; right: 1.25rem; background: #1c1c1e; border: 2px solid #3a3a3e; border-radius: 4px; padding: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: 272px; box-shadow: 0 12px 32px rgba(0,0,0,0.6); visibility: hidden; opacity: 0; pointer-events: none; transform: translateY(-6px); transition: opacity 0.14s, transform 0.14s; }
+  #pnav-pop.open { visibility: visible; opacity: 1; pointer-events: auto; transform: translateY(0); }
+  #pnav-pop a { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.75rem; border-radius: 3px; text-decoration: none; color: #b0b0b8; font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 0.82rem; font-weight: 500; transition: background 0.1s, color 0.1s; }
+  #pnav-pop a:hover { background: #28282c; color: #f0f0f2; }
+  #pnav-pop a.pnav-cur { background: #28282c; color: #f0f0f2; font-weight: 600; }
+</style>
+<div id="pnav">
+  <a href="index.html" id="pnav-back">← Back to Apps</a>
+  <button id="pnav-btn" aria-label="All projects">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><circle cx="1.5" cy="1.5" r="1.5"/><circle cx="7.5" cy="1.5" r="1.5"/><circle cx="13.5" cy="1.5" r="1.5"/><circle cx="1.5" cy="7.5" r="1.5"/><circle cx="7.5" cy="7.5" r="1.5"/><circle cx="13.5" cy="7.5" r="1.5"/><circle cx="1.5" cy="13.5" r="1.5"/><circle cx="7.5" cy="13.5" r="1.5"/><circle cx="13.5" cy="13.5" r="1.5"/></svg>
+  </button>
+  <div id="pnav-pop">
+    <a href="bpm-finder.html">🎵 BPM Finder</a>
+    <a href="converter.html">🔄 Converter</a>
+    <a href="grab.html">📹 Grab</a>
+    <a href="midi-shaper.html">🎹 MIDI Shaper</a>
+    <a href="poop-tracker.html">💩 Poop Tracker</a>
+    <a href="treasure-fleet.html">🗺️ Treasure Fleet</a>
+  </div>
+</div>
+<script>
+(function(){
+  var btn=document.getElementById('pnav-btn'),pop=document.getElementById('pnav-pop');
+  btn.addEventListener('click',function(e){e.stopPropagation();var o=pop.classList.toggle('open');btn.classList.toggle('open',o);});
+  document.addEventListener('click',function(){pop.classList.remove('open');btn.classList.remove('open');});
+  pop.addEventListener('click',function(e){e.stopPropagation();});
+  var cur=location.pathname.split('/').pop();
+  pop.querySelectorAll('a').forEach(function(a){if(decodeURIComponent(a.getAttribute('href'))===cur)a.classList.add('pnav-cur');});
+})();
+</script>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('log', this)">✏️ Log Entry</button>
+  <button class="tab-btn" onclick="switchTab('locallog', this)">📋 Local Log</button>
+  <button class="tab-btn" onclick="switchTab('sync', this)">🔄 Sync</button>
+</div>
+
+<!-- ══════════ LOG ENTRY TAB ══════════ -->
+<div id="tab-log" class="tab-panel active">
+  <div class="app-header">
+    <div class="app-logo">💩</div>
+    <div class="app-title-block">
+      <div class="app-title">Poop Tracker</div>
+      <div class="app-subtitle">Log entries on the go</div>
+    </div>
+  </div>
+  <div class="blurb-bar" style="max-width:480px;">🔒 All data is stored in browser local storage. Nothing is uploaded or shared. Use import/export accordingly to avoid data loss.</div>
+
+  <div class="page">
+    <div class="card">
+      <div class="section-label">When</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="field" style="margin:0"><label>Date</label><input type="date" id="m-date"></div>
+        <div class="field" style="margin:0"><label>Time</label><input type="time" id="m-time"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Bristol Type</div>
+      <div class="bristol-grid" id="bristol-picker"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Color</div>
+      <div class="color-grid" id="color-picker" style="margin-bottom:20px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Notes</div>
+      <textarea id="m-notes" placeholder="Anything unusual? Smell, consistency, effort…"></textarea>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Photo (optional)</div>
+      <div class="photo-btns" id="photo-btns">
+        <div class="photo-btn">
+          <input type="file" accept="image/*" capture="environment" onchange="handlePhoto(this)">
+          <div class="ph-icon">📷</div>
+          <div class="ph-text">Take Photo</div>
+        </div>
+        <div class="photo-btn">
+          <input type="file" accept="image/*" onchange="handlePhoto(this)">
+          <div class="ph-icon">🖼️</div>
+          <div class="ph-text">Choose from Gallery</div>
+        </div>
+      </div>
+      <div class="photo-preview" id="photo-preview" style="display:none;">
+        <img id="photo-preview-img" src="" alt="Preview">
+        <button class="photo-remove" onclick="removePhoto()">✕</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveEntry()">💾 Save Entry</button>
+
+    <!-- Export nudge -->
+    <div id="export-nudge" style="display:none;margin-top:12px;background:#FFF3E0;border:1.5px solid var(--accent-soft);border-radius:var(--radius-sm);padding:12px 14px;align-items:center;gap:10px;">
+      <span style="font-size:20px;">📤</span>
+      <div style="flex:1;">
+        <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--brown-deep);" id="nudge-text"></div>
+        <div style="font-size:11px;color:var(--text-soft);margin-top:2px;">Export now to back them up</div>
+      </div>
+      <button class="btn btn-primary" style="padding:8px 14px;font-size:13px;width:auto;" onclick="exportEntries()">Export</button>
+    </div>
+
+    <div style="margin-top:20px;text-align:center;font-size:12px;color:var(--text-soft);">See <strong style="cursor:pointer;color:var(--brown-light);" onclick="switchTabByName('locallog')">Local Log</strong> for previous entries</div>
+
+    <!-- Bristol legend collapsible -->
+    <div style="margin-top:16px;">
+      <button onclick="toggleLegend()" style="width:100%;background:none;border:none;text-align:left;cursor:pointer;padding:0;">
+        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;margin:0;">
+          <span>Bristol Scale Reference</span>
+          <span id="legend-chevron" style="font-size:10px;">▼</span>
+        </div>
+      </button>
+      <div id="bristol-legend" style="display:none;margin-top:10px;background:var(--card);border-radius:var(--radius-sm);padding:12px;border:1px solid var(--border);"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ LOCAL LOG TAB ══════════ -->
+<div id="tab-locallog" class="tab-panel">
+  <div class="app-header wide">
+    <div class="app-logo">💩</div>
+    <div class="app-title-block">
+      <div class="app-title">Local Log</div>
+      <div class="app-subtitle">All entries on this device</div>
+    </div>
+  </div>
+  <div class="blurb-bar" style="max-width:900px;">🔒 All data is stored in browser local storage. Nothing is uploaded or shared. Use import/export accordingly to avoid data loss.</div>
+
+  <div class="page wide">
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total Entries</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-days">0</div><div class="stat-label">Days Tracked</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-avg">—</div><div class="stat-label">Avg Type</div></div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <button class="btn btn-secondary" style="width:100%;justify-content:center;background:#F0F7FF;border-color:#C0D8F0;color:#1A4A7A;" onclick="generateReport()">
+        🖨️ Generate PDF Report
+      </button>
+    </div>
+
+    <div class="filter-bar">
+      <select id="filter-type" onchange="renderLog()">
+        <option value="">All Types</option>
+        <option value="1">Type 1</option><option value="2">Type 2</option><option value="3">Type 3</option>
+        <option value="4">Type 4</option><option value="5">Type 5</option><option value="6">Type 6</option>
+        <option value="7">Type 7</option>
+      </select>
+      <select id="filter-color" onchange="renderLog()"><option value="">All Colors</option></select>
+      <input type="date" id="filter-from" onchange="renderLog()">
+      <input type="date" id="filter-to" onchange="renderLog()">
+    </div>
+
+    <div id="main-log"></div>
+  </div>
+</div>
+
+<!-- ══════════ SYNC TAB ══════════ -->
+<div id="tab-sync" class="tab-panel">
+  <div class="app-header wide">
+    <div class="app-logo">💩</div>
+    <div class="app-title-block">
+      <div class="app-title">Sync</div>
+      <div class="app-subtitle">Move your log between devices</div>
+    </div>
+  </div>
+  <div class="blurb-bar" style="max-width:640px;">📦 Data lives locally on each device. Export from one, import to another — in any direction, as many times as needed. Entries are matched by ID so there are no duplicates.</div>
+
+  <div class="page" style="max-width:640px;">
+    <div class="card">
+      <div class="section-label">Export</div>
+      <p style="font-size:13px;color:var(--text-soft);margin-bottom:14px;line-height:1.5;">Saves all entries and photos on this device to a single JSON file. Import that file on any other device to merge.</p>
+      <button class="btn btn-primary" onclick="exportEntries()">📤 Export This Device's Log</button>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Import</div>
+      <p style="font-size:13px;color:var(--text-soft);margin-bottom:14px;line-height:1.5;">Select one or more JSON exports to merge into this device. Already-existing entries are skipped automatically.</p>
+      <div class="import-zone">
+        <input type="file" accept=".json" multiple onchange="importJSON(this)">
+        <div class="iz-icon">📂</div>
+        <div class="iz-text">Tap to select export file(s)</div>
+        <div class="iz-sub">Multiple files OK — merges and deduplicates</div>
+      </div>
+      <div id="import-status" style="margin-top:10px;font-size:13px;color:var(--green);font-weight:600;text-align:center;display:none;"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Danger Zone</div>
+      <button class="btn btn-danger" style="width:100%;justify-content:center;" onclick="clearAllData()">
+        🗑️ Clear All Data on This Device
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+
+const BRISTOL = [
+  { type:1, face:'😣', desc:'Separate hard lumps' },
+  { type:2, face:'😖', desc:'Lumpy sausage' },
+  { type:3, face:'🙂', desc:'Sausage w/ cracks' },
+  { type:4, face:'😊', desc:'Smooth soft sausage' },
+  { type:5, face:'😐', desc:'Soft blobs' },
+  { type:6, face:'😟', desc:'Mushy pieces' },
+  { type:7, face:'😱', desc:'Watery, no solids' },
+];
+
+const COLORS = [
+  { id:'brown', hex:'#8B4513', label:'Brown' },
+  { id:'tan',   hex:'#C8943A', label:'Tan' },
+  { id:'yellow',hex:'#E8C840', label:'Yellow' },
+  { id:'green', hex:'#5A8A40', label:'Green' },
+  { id:'black', hex:'#2A1A0A', label:'Black' },
+  { id:'red',   hex:'#C03030', label:'Red' },
+  { id:'white', hex:'#E8E0D0', label:'White' },
+  { id:'grey',  hex:'#888888', label:'Grey' },
+];
+
+let selectedBristol = null;
+let selectedColor = null;
+let photoBase64 = null;
+
+// ── INDEXEDDB ─────────────────────────────────────────────────────────────
+
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    if (db) { resolve(db); return; }
+    const req = indexedDB.open('PoopTrackerDB', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('photos', { keyPath:'id' });
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror = () => reject(req.error);
+  });
+}
+function savePhoto(id, base64) {
+  return openDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction('photos','readwrite');
+    tx.objectStore('photos').put({ id, data: base64 });
+    tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
+  }));
+}
+function getPhoto(id) {
+  return openDB().then(db => new Promise(resolve => {
+    const req = db.transaction('photos','readonly').objectStore('photos').get(id);
+    req.onsuccess = () => resolve(req.result ? req.result.data : null);
+    req.onerror = () => resolve(null);
+  }));
+}
+function deletePhoto(id) {
+  return openDB().then(db => new Promise(resolve => {
+    const tx = db.transaction('photos','readwrite');
+    tx.objectStore('photos').delete(id);
+    tx.oncomplete = resolve; tx.onerror = resolve;
+  }));
+}
+
+// ── UNIFIED STORAGE ───────────────────────────────────────────────────────
+
+function getEntries() {
+  try { return JSON.parse(localStorage.getItem('pt_entries') || '[]'); } catch { return []; }
+}
+function saveEntries(entries) {
+  const safe = entries.map(e => { const c={...e}; delete c.photo; return c; });
+  localStorage.setItem('pt_entries', JSON.stringify(safe));
+}
+
+// ── MIGRATION ─────────────────────────────────────────────────────────────
+
+async function migrate() {
+  // 1. Merge pt_mobile + pt_desktop → pt_entries
+  const existing = getEntries();
+  const existingIds = new Set(existing.map(e => e.id));
+  let changed = false;
+
+  for (const key of ['pt_mobile','pt_desktop']) {
+    const raw = localStorage.getItem(key);
+    if (!raw) continue;
+    let old; try { old = JSON.parse(raw); } catch { continue; }
+    for (const e of old) {
+      if (!existingIds.has(e.id)) {
+        if (e.photo) { await savePhoto(e.id, e.photo); e.hasPhoto = true; delete e.photo; }
+        existing.push(e);
+        existingIds.add(e.id);
+        changed = true;
+      }
+    }
+    localStorage.removeItem(key);
+  }
+
+  // 2. Migrate any inline photos still in pt_entries
+  for (const e of existing) {
+    if (e.photo) {
+      await savePhoto(e.id, e.photo);
+      e.hasPhoto = true;
+      delete e.photo;
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    existing.sort((a,b) => new Date(b.date+'T'+b.time) - new Date(a.date+'T'+a.time));
+    saveEntries(existing);
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+
+async function init() {
+  const now = new Date();
+  document.getElementById('m-date').value = now.toISOString().slice(0,10);
+  document.getElementById('m-time').value = now.toTimeString().slice(0,5);
+
+  buildBristolPicker();
+  buildColorPicker();
+  buildBristolLegend();
+  buildColorFilter();
+
+  await openDB();
+  await migrate();
+
+  updateNudge();
+  renderLog();
+  updateStats();
+}
+
+// ── BRISTOL PICKER ────────────────────────────────────────────────────────
+
+function buildBristolPicker() {
+  document.getElementById('bristol-picker').innerHTML = BRISTOL.map(b => `
+    <div class="bristol-item" id="b-${b.type}" onclick="selectBristol(${b.type})">
+      <div class="bristol-poop">${b.face}</div>
+      <div class="bristol-num">Type ${b.type}</div>
+      <div class="bristol-desc">${b.desc}</div>
+    </div>`).join('');
+}
+function selectBristol(type) {
+  document.querySelectorAll('.bristol-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('b-'+type).classList.add('selected');
+  selectedBristol = type;
+}
+function buildBristolLegend() {
+  document.getElementById('bristol-legend').innerHTML = BRISTOL.map(b => `
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:20px;">${b.face}</span>
+      <div><span style="font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;color:var(--brown-deep);">Type ${b.type}</span>
+      <span style="font-size:12px;color:var(--text-soft);margin-left:6px;">${b.desc}</span></div>
+    </div>`).join('');
+}
+function toggleLegend() {
+  const el = document.getElementById('bristol-legend');
+  const ch = document.getElementById('legend-chevron');
+  const open = el.style.display === 'block';
+  el.style.display = open ? 'none' : 'block';
+  ch.textContent = open ? '▼' : '▲';
+}
+
+// ── COLOR PICKER ──────────────────────────────────────────────────────────
+
+function buildColorPicker() {
+  document.getElementById('color-picker').innerHTML = COLORS.map(c => `
+    <div style="position:relative;margin-bottom:20px;">
+      <div class="color-swatch" id="c-${c.id}" style="background:${c.hex};${c.id==='white'?'border:2px solid #ddd;':''}" onclick="selectColor('${c.id}')">
+        <span>${c.label}</span>
+      </div>
+    </div>`).join('');
+}
+function selectColor(id) {
+  document.querySelectorAll('.color-swatch').forEach(el => el.classList.remove('selected'));
+  document.getElementById('c-'+id).classList.add('selected');
+  selectedColor = id;
+}
+function buildColorFilter() {
+  const sel = document.getElementById('filter-color');
+  COLORS.forEach(c => { const o = document.createElement('option'); o.value=c.id; o.textContent=c.label; sel.appendChild(o); });
+}
+
+// ── PHOTO ─────────────────────────────────────────────────────────────────
+
+function handlePhoto(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    photoBase64 = e.target.result;
+    document.getElementById('photo-preview-img').src = photoBase64;
+    document.getElementById('photo-preview').style.display = 'block';
+    document.getElementById('photo-btns').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function removePhoto() {
+  photoBase64 = null;
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('photo-btns').style.display = 'grid';
+  document.querySelectorAll('#photo-btns input[type="file"]').forEach(i => i.value='');
+}
+
+// ── SAVE ENTRY ────────────────────────────────────────────────────────────
+
+async function saveEntry() {
+  const date = document.getElementById('m-date').value;
+  const time = document.getElementById('m-time').value;
+  const notes = document.getElementById('m-notes').value.trim();
+
+  if (!date || !time) { showToast('⚠️ Please set date and time'); return; }
+  if (!selectedBristol) { showToast('⚠️ Please select a Bristol type'); return; }
+  if (!selectedColor) { showToast('⚠️ Please select a color'); return; }
+
+  const entry = { id: crypto.randomUUID(), date, time, bristol: selectedBristol, color: selectedColor, notes, createdAt: new Date().toISOString() };
+
+  if (photoBase64) {
+    try { await savePhoto(entry.id, photoBase64); entry.hasPhoto = true; }
+    catch { showToast('⚠️ Photo could not be saved, entry saved without it'); }
+  }
+
+  const entries = getEntries();
+  entries.unshift(entry);
+  saveEntries(entries);
+
+  selectedBristol = null; selectedColor = null; photoBase64 = null;
+  document.querySelectorAll('.bristol-item').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.color-swatch').forEach(el => el.classList.remove('selected'));
+  document.getElementById('m-notes').value = '';
+  removePhoto();
+  const now = new Date();
+  document.getElementById('m-date').value = now.toISOString().slice(0,10);
+  document.getElementById('m-time').value = now.toTimeString().slice(0,5);
+
+  showToast('✅ Entry saved!');
+  updateNudge();
+  updateStats();
+}
+
+// ── EXPORT NUDGE ──────────────────────────────────────────────────────────
+
+const NUDGE_THRESHOLD = 3;
+function updateNudge() {
+  const entries = getEntries();
+  const lastExport = parseInt(localStorage.getItem('pt_last_export_count') || '0');
+  const unsaved = entries.length - lastExport;
+  const nudge = document.getElementById('export-nudge');
+  if (!nudge) return;
+  if (unsaved >= NUDGE_THRESHOLD) {
+    document.getElementById('nudge-text').textContent = `You have ${unsaved} unexported entr${unsaved!==1?'ies':'y'}`;
+    nudge.style.display = 'flex';
+  } else {
+    nudge.style.display = 'none';
+  }
+}
+
+// ── ENTRY CARD ────────────────────────────────────────────────────────────
+
+function entryCardHTML(e) {
+  const colorObj = COLORS.find(c => c.id === e.color) || { hex:'#888', label: e.color };
+  const bristolObj = BRISTOL.find(b => b.type === e.bristol) || { face:'💩', desc:'' };
+  const dt = new Date(e.date+'T'+e.time);
+  const dateStr = dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const timeStr = dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  return `
+    <div class="entry-card">
+      <div class="entry-header">
+        <span style="font-size:22px;">${bristolObj.face}</span>
+        <div style="flex:1;">
+          <div class="entry-date">${dateStr} · ${timeStr}</div>
+          <div style="display:flex;gap:6px;margin-top:4px;align-items:center;flex-wrap:wrap;">
+            <span class="entry-type-badge">Type ${e.bristol} · ${bristolObj.desc}</span>
+            <span style="display:inline-flex;align-items:center;gap:4px;background:var(--cream);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700;font-family:'Nunito',sans-serif;color:var(--brown-deep);">
+              <span class="entry-color-dot" style="background:${colorObj.hex};${e.color==='white'?'border:1px solid #ccc;':''}"></span>${colorObj.label}
+            </span>
+          </div>
+        </div>
+        <button class="btn btn-danger" onclick="deleteEntry('${e.id}')">✕</button>
+      </div>
+      ${e.notes ? `<div class="entry-notes">📝 ${e.notes}</div>` : ''}
+      ${e.photo ? `<div class="entry-photo"><img src="${e.photo}" alt="Photo" loading="lazy"></div>` : ''}
+    </div>`;
+}
+
+// ── RENDER LOG ────────────────────────────────────────────────────────────
+
+async function renderLog() {
+  let entries = getEntries();
+  const filterType  = document.getElementById('filter-type')?.value;
+  const filterColor = document.getElementById('filter-color')?.value;
+  const filterFrom  = document.getElementById('filter-from')?.value;
+  const filterTo    = document.getElementById('filter-to')?.value;
+
+  if (filterType)  entries = entries.filter(e => String(e.bristol) === filterType);
+  if (filterColor) entries = entries.filter(e => e.color === filterColor);
+  if (filterFrom)  entries = entries.filter(e => e.date >= filterFrom);
+  if (filterTo)    entries = entries.filter(e => e.date <= filterTo);
+
+  const el = document.getElementById('main-log');
+  if (!el) return;
+
+  if (entries.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">💩</div>
+      <div class="es-text">${getEntries().length===0?'No entries yet':'No matching entries'}</div>
+      <div class="es-sub">${getEntries().length===0?'Log your first entry to get started':'Try adjusting your filters'}</div></div>`;
+    return;
+  }
+
+  const photoMap = {};
+  await Promise.all(entries.map(async e => { if (e.hasPhoto) photoMap[e.id] = await getPhoto(e.id); }));
+
+  el.innerHTML = `<div style="font-size:12px;color:var(--text-soft);margin-bottom:10px;font-weight:600;">${entries.length} entr${entries.length!==1?'ies':'y'}</div>`
+    + entries.map(e => entryCardHTML({...e, photo: photoMap[e.id]||null})).join('');
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────
+
+function updateStats() {
+  const entries = getEntries();
+  const total = document.getElementById('stat-total');
+  const days  = document.getElementById('stat-days');
+  const avg   = document.getElementById('stat-avg');
+  if (!total) return;
+  total.textContent = entries.length;
+  days.textContent  = new Set(entries.map(e => e.date)).size;
+  avg.textContent   = entries.length ? (entries.reduce((s,e)=>s+e.bristol,0)/entries.length).toFixed(1) : '—';
+}
+
+// ── DELETE ENTRY ──────────────────────────────────────────────────────────
+
+async function deleteEntry(id) {
+  await deletePhoto(id);
+  saveEntries(getEntries().filter(e => e.id !== id));
+  renderLog();
+  updateStats();
+  updateNudge();
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────
+
+async function exportEntries() {
+  const entries = getEntries();
+  if (entries.length === 0) { showToast('Nothing to export yet'); return; }
+  showToast('⏳ Preparing export...');
+  const withPhotos = await Promise.all(entries.map(async e => ({
+    ...e, photo: e.hasPhoto ? await getPhoto(e.id) : null
+  })));
+  const blob = new Blob([JSON.stringify({ version:2, exportedAt: new Date().toISOString(), entries: withPhotos }, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `poop-log-${new Date().toISOString().slice(0,10)}.json`; a.click();
+  URL.revokeObjectURL(url);
+  localStorage.setItem('pt_last_export_count', entries.length);
+  updateNudge();
+  showToast(`📤 Exported ${entries.length} entries`);
+}
+
+// ── IMPORT ────────────────────────────────────────────────────────────────
+
+function importJSON(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  let processed = 0, allIncoming = [];
+
+  async function finish() {
+    const existing = getEntries();
+    const existingIds = new Set(existing.map(e => e.id));
+    const seen = new Set();
+    const uniqueAll = allIncoming.filter(e => { if (seen.has(e.id)) return false; seen.add(e.id); return true; });
+    const newEntries = uniqueAll.filter(e => !existingIds.has(e.id));
+    const totalSeen = allIncoming.length - newEntries.length;
+
+    await Promise.all(newEntries.map(async e => {
+      if (e.photo) { await savePhoto(e.id, e.photo); e.hasPhoto = true; delete e.photo; }
+    }));
+
+    const merged = [...existing, ...newEntries].sort((a,b) => new Date(b.date+'T'+b.time) - new Date(a.date+'T'+a.time));
+    saveEntries(merged);
+
+    const statusEl = document.getElementById('import-status');
+    const fileWord = files.length > 1 ? `${files.length} files` : '1 file';
+    statusEl.textContent = newEntries.length > 0
+      ? `✅ Merged ${newEntries.length} new entr${newEntries.length!==1?'ies':'y'} from ${fileWord} (${totalSeen} already existed)`
+      : `ℹ️ No new entries from ${fileWord} — all ${allIncoming.length} already in log`;
+    statusEl.style.display = 'block';
+    renderLog(); updateStats(); updateNudge();
+    input.value = '';
+    setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
+  }
+
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try { const data = JSON.parse(e.target.result); allIncoming = allIncoming.concat(data.entries || (Array.isArray(data) ? data : [])); }
+      catch { showToast(`❌ Could not parse ${file.name}`); }
+      if (++processed === files.length) finish();
+    };
+    reader.readAsText(file);
+  });
+}
+
+// ── CLEAR ALL ─────────────────────────────────────────────────────────────
+
+async function clearAllData() {
+  if (!confirm('Clear ALL data on this device? This cannot be undone. Export first if needed.')) return;
+  const entries = getEntries();
+  await Promise.all(entries.map(e => deletePhoto(e.id)));
+  saveEntries([]);
+  localStorage.removeItem('pt_last_export_count');
+  renderLog(); updateStats(); updateNudge();
+  showToast('🗑️ All data cleared');
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────────────────────
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (tab === 'locallog') { renderLog(); updateStats(); }
+}
+function switchTabByName(tab) {
+  const btns = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  // find matching button by onclick
+  btns.forEach(b => { if (b.getAttribute('onclick')?.includes(`'${tab}'`)) b.classList.add('active'); });
+  if (tab === 'locallog') { renderLog(); updateStats(); }
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+
+let toastTimeout;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── PDF REPORT ────────────────────────────────────────────────────────────
+
+async function generateReport() {
+  const entries = getEntries();
+  if (entries.length === 0) { showToast('No data to report'); return; }
+  showToast('⏳ Building report...');
+
+  const photoMap = {};
+  await Promise.all(entries.map(async e => { if (e.hasPhoto) photoMap[e.id] = await getPhoto(e.id); }));
+  const withPhotos = entries.map(e => ({...e, photo: photoMap[e.id]||null}));
+  const sorted = [...withPhotos].sort((a,b) => new Date(a.date+'T'+a.time) - new Date(b.date+'T'+b.time));
+  const first = sorted[0], last = sorted[sorted.length-1];
+  const dateRange = `${fmtDate(first.date)} – ${fmtDate(last.date)}`;
+  const days = new Set(sorted.map(e=>e.date)).size;
+  const avg = (sorted.reduce((s,e)=>s+e.bristol,0)/sorted.length).toFixed(1);
+
+  const bCounts = {}; BRISTOL.forEach(b=>bCounts[b.type]=0); sorted.forEach(e=>{if(bCounts[e.bristol]!==undefined)bCounts[e.bristol]++;});
+  const cCounts = {}; COLORS.forEach(c=>cCounts[c.id]=0); sorted.forEach(e=>{if(cCounts[e.color]!==undefined)cCounts[e.color]++;});
+
+  const bristolBars = BRISTOL.map(b => {
+    const count=bCounts[b.type], pct=sorted.length?Math.round((count/sorted.length)*100):0;
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <span style="font-size:16px;width:24px;">${b.face}</span>
+      <span style="font-size:11px;width:52px;font-weight:700;color:#6B3A2A;">Type ${b.type}</span>
+      <div style="flex:1;background:#F5E6D3;border-radius:4px;height:14px;overflow:hidden;">
+        <div style="background:#FF8C42;height:100%;width:${pct}%;border-radius:4px;"></div>
+      </div>
+      <span style="font-size:11px;width:36px;text-align:right;color:#7A4F35;">${count} (${pct}%)</span>
+    </div>`;
+  }).join('');
+
+  const colorDots = COLORS.filter(c=>cCounts[c.id]>0).map(c =>
+    `<span style="display:inline-flex;align-items:center;gap:5px;background:#F5E6D3;border-radius:20px;padding:3px 10px;margin:2px;font-size:12px;font-weight:700;color:#6B3A2A;">
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${c.hex};${c.id==='white'?'border:1px solid #ccc;':''}"></span>${c.label}: ${cCounts[c.id]}
+    </span>`).join('');
+
+  const entryRows = [...sorted].reverse().map(e => {
+    const colorObj=COLORS.find(c=>c.id===e.color)||{hex:'#888',label:e.color};
+    const bristolObj=BRISTOL.find(b=>b.type===e.bristol)||{face:'💩',desc:''};
+    const photoHtml=e.photo?`<div style="margin-top:8px;"><img src="${e.photo}" style="max-width:220px;max-height:160px;border-radius:8px;object-fit:cover;border:1px solid #E8D5C0;" alt="Photo"></div>`:'';
+    return `<div style="padding:14px 0;border-bottom:1px solid #EDD5BC;page-break-inside:avoid;">
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <span style="font-size:22px;">${bristolObj.face}</span>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:13px;color:#7A4F35;">${fmtDate(e.date)} · ${fmtTime(e.time)}</div>
+          <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <span style="background:#F5E6D3;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:#6B3A2A;">Type ${e.bristol} · ${bristolObj.desc}</span>
+            <span style="display:inline-flex;align-items:center;gap:4px;background:#F5E6D3;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:#6B3A2A;">
+              <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${colorObj.hex};${e.color==='white'?'border:1px solid #ccc;':''}"></span>${colorObj.label}
+            </span>
+          </div>
+          ${e.notes?`<div style="margin-top:6px;font-size:12px;color:#7A4F35;font-style:italic;">${e.notes}</div>`:''}
+          ${photoHtml}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Poop Log Report — ${dateRange}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Nunito+Sans:wght@400;600&display=swap');
+  body{font-family:'Nunito Sans',sans-serif;color:#3D2010;background:#fff;margin:0;padding:0;}
+  .page{max-width:680px;margin:0 auto;padding:40px 32px;}
+  h1{font-family:'Nunito',sans-serif;font-size:28px;font-weight:900;color:#6B3A2A;margin:0 0 4px;}
+  .section{margin-bottom:28px;}
+  .section-title{font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#B08060;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid #F5E6D3;}
+  .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .summary-box{background:#FFF8F0;border:1px solid #E8D5C0;border-radius:10px;padding:14px;text-align:center;}
+  .summary-num{font-family:'Nunito',sans-serif;font-size:28px;font-weight:900;color:#6B3A2A;}
+  .summary-label{font-size:11px;color:#B08060;font-weight:600;margin-top:2px;}
+  @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.no-print{display:none;}}
+</style></head><body><div class="page">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+    <span style="font-size:36px;">💩</span>
+    <div><h1>Poop Log Report</h1><div style="font-size:13px;color:#B08060;margin-bottom:28px;">Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})} · For pediatrician review</div></div>
+  </div>
+  <div class="no-print" style="background:#FFF3E0;border:1.5px solid #FFB380;border-radius:10px;padding:12px 16px;margin-bottom:24px;font-size:13px;color:#A0522D;font-weight:600;">
+    👆 Use your browser's <strong>File → Print</strong> (or Ctrl+P / Cmd+P) and choose <strong>Save as PDF</strong>
+  </div>
+  <div class="section"><div class="section-title">Summary</div>
+    <div class="summary-grid">
+      <div class="summary-box"><div class="summary-num">${sorted.length}</div><div class="summary-label">Total Entries</div></div>
+      <div class="summary-box"><div class="summary-num">${days}</div><div class="summary-label">Days Tracked</div></div>
+      <div class="summary-box"><div class="summary-num">${avg}</div><div class="summary-label">Avg Bristol Type</div></div>
+    </div>
+    <div style="margin-top:10px;font-size:13px;color:#7A4F35;"><strong>Date range:</strong> ${dateRange}</div>
+  </div>
+  <div class="section"><div class="section-title">Bristol Type Distribution</div>${bristolBars}</div>
+  <div class="section"><div class="section-title">Color Breakdown</div><div>${colorDots}</div></div>
+  <div class="section"><div class="section-title">Entry Log (${sorted.length} entries, newest first)</div>${entryRows}</div>
+</div></body></html>`;
+
+  const win = window.open('','_blank');
+  win.document.write(reportHtml);
+  win.document.close();
+}
+
+function fmtDate(dateStr) {
+  const [y,m,d] = dateStr.split('-');
+  return new Date(y,m-1,d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function fmtTime(timeStr) {
+  const [h,min] = timeStr.split(':').map(Number);
+  return `${h%12||12}:${String(min).padStart(2,'0')} ${h>=12?'PM':'AM'}`;
+}
+
+// ── START ─────────────────────────────────────────────────────────────────
+
+init();
+</script>
+
+
+</body>
+</html>

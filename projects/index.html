@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projects — Bryan Strobehn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:    #0d0f14;
+      --bg2:   #13161d;
+      --bg3:   #1c2030;
+      --border: rgba(255,255,255,0.08);
+      --accent: #d4722a;
+      --text:       #c8d0e0;
+      --text-muted: #7a8499;
+      --text-dim:   #a0aabb;
+      --green: #00e676;
+      --amber: #ffab40;
+      --red:   #ff5252;
+      --blue:  #00aaff;
+      --font-display: 'Barlow Condensed', sans-serif;
+      --font-body:    'Barlow', sans-serif;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 19px; -webkit-font-smoothing: antialiased; }
+
+    /* ── Shell ── */
+    .shell { display: grid; grid-template-columns: 275px 1fr; grid-template-rows: 65px 1fr 33px; height: 100vh; overflow: hidden; }
+
+    /* ── Topbar ── */
+    .topbar { grid-column: 1 / -1; background: #0a0c10; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 2rem; gap: 1.25rem; }
+    .topbar-logo { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+    .topbar-logo span { color: rgba(255,255,255,0.25); font-weight: 400; }
+    .topbar-sub { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); border-left: 1px solid var(--border); padding-left: 1.25rem; }
+    .topbar-nav { margin-left: auto; display: flex; align-items: center; gap: 1.5rem; }
+    .topbar-nav a { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.45); text-decoration: none; transition: color 0.15s; }
+    .topbar-nav a:hover { color: rgba(255,255,255,0.85); }
+    .topbar-nav a.active { color: var(--accent); border-bottom: 1px solid var(--accent); padding-bottom: 1px; }
+
+    /* ── Sidebar ── */
+    .sidebar { background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; padding: 1.5rem 0; }
+    .sidebar-label { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); padding: 0 1.5rem; margin-bottom: 0.4rem; margin-top: 1.5rem; }
+    .sidebar-label:first-child { margin-top: 0; }
+    .sidebar-item { display: flex; align-items: center; gap: 0.7rem; padding: 0.65rem 1.5rem; font-size: 0.9rem; color: var(--text-dim); cursor: pointer; transition: background 0.1s, color 0.1s; border-left: 2px solid transparent; text-decoration: none; }
+    .sidebar-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    .sidebar-item.active { background: rgba(212,114,42,0.1); color: var(--accent); border-left-color: var(--accent); }
+
+    /* ── Content ── */
+    .content { overflow-y: auto; padding: 2.5rem 3.5rem 4rem; background: radial-gradient(ellipse 60% 40% at 80% 0%, rgba(212,114,42,0.04) 0%, transparent 70%), var(--bg); }
+    .content-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+    .content-header-left { display: flex; flex-direction: column; gap: 0.5rem; }
+    .content-title { font-family: var(--font-display); font-size: 2rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; line-height: 1; }
+    .content-title span { color: var(--accent); }
+    .content-disclaimer { font-size: 0.78rem; color: var(--text-muted); font-style: italic; max-width: 520px; line-height: 1.5; }
+
+    /* ── Category filters ── */
+    .filter-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: flex-start; padding-top: 0.35rem; }
+    .filter-btn { background: none; border: 1px solid var(--border); border-radius: 3px; padding: 0.35rem 1rem; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); cursor: pointer; font-family: var(--font-display); transition: all 0.15s; }
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ── Tile grid ── */
+    .tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(265px, 1fr)); gap: 16px; }
+
+    /* ── Tile ── */
+    .tile { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; display: flex; flex-direction: column; cursor: pointer; transition: background 0.15s, border-color 0.15s, transform 0.12s; position: relative; text-decoration: none; color: inherit; overflow: visible; }
+    .tile:not(.placeholder):hover { background: var(--bg3); border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
+    .tile:not(.placeholder):hover .tile-launch { opacity: 1; transform: translateY(0); }
+    .tile.hidden { display: none; }
+
+    /* Placeholder tiles */
+    .tile.placeholder { cursor: default; pointer-events: none; }
+
+    /* Read-only tiles — hover works, but no pointer cursor and no launch link */
+    .tile.tile-readonly { cursor: default; }
+    .tile.tile-readonly .tile-launch { display: none !important; }
+
+    /* Image / placeholder area */
+    .tile-img-wrap { width: 100%; aspect-ratio: 16/9; background: linear-gradient(135deg, #1a1e28 0%, #0f1219 100%); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; flex-shrink: 0; border-radius: 5px 5px 0 0; }
+    .tile-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .tile-icon { font-size: 2.4rem; opacity: 0.2; }
+
+    /* ── Status badge (top-left of image) ── */
+    .status-badge {
+      position: absolute; top: 0.6rem; left: 0.6rem;
+      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.18rem 0.6rem; border-radius: 3px;
+      display: flex; align-items: center; gap: 0.3rem;
+    }
+    .status-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .status-badge[data-status="live"]                { background: rgba(0,230,118,0.15); color: var(--green); }
+    .status-badge[data-status="live"]::before        { background: var(--green); box-shadow: 0 0 5px var(--green); }
+    .status-badge[data-status="in-progress"]         { background: rgba(255,171,64,0.15); color: var(--amber); }
+    .status-badge[data-status="in-progress"]::before { background: var(--amber); }
+    .status-badge[data-status="paused"]              { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+    .status-badge[data-status="paused"]::before      { background: var(--text-muted); }
+
+    /* ── Tile body ── */
+    .tile-body { padding: 1rem 1.2rem 1.1rem; display: flex; flex-direction: column; flex: 1; }
+
+    /* ── Dual tag system ── */
+    .tile-tags { display: flex; gap: 0.35rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.4rem; }
+    .tile-tag-tool  { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #5b9cf6; background: rgba(91,156,246,0.14); padding: 0.15rem 0.5rem; border-radius: 2px; }
+    .tile-tag-fun   { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #a78bfa; background: rgba(167,139,250,0.14); padding: 0.15rem 0.5rem; border-radius: 2px; }
+    .tile-tag-work  { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #fbbf24; background: rgba(251,191,36,0.14); padding: 0.15rem 0.5rem; border-radius: 2px; }
+    .tile-tag-flavor {
+      font-size: 0.6rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase;
+      color: var(--text-muted); background: rgba(255,255,255,0.05);
+      padding: 0.15rem 0.5rem; border-radius: 2px;
+    }
+
+    .tile-name { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #e8ecf4; line-height: 1.2; margin-bottom: 0.45rem; }
+    .tile-desc { font-size: 0.84rem; color: var(--text-dim); line-height: 1.5; flex: 1; }
+    .tile-launch { margin-top: 0.8rem; display: inline-block; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); opacity: 0; transform: translateY(3px); transition: opacity 0.15s, transform 0.15s; }
+
+    /* ── Statusbar ── */
+    .statusbar { grid-column: 1 / -1; background: #080a0d; border-top: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; gap: 1.75rem; font-size: 0.7rem; letter-spacing: 0.06em; color: var(--text-muted); }
+    .statusbar-pip { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 5px var(--green); }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #1e2330; border-radius: 2px; }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-logo">BS<span>/</span>LAUNCHER</div>
+    <nav class="topbar-nav">
+      <a href="../index.html">About</a>
+      <a href="../work/index.html">Case Studies</a>
+      <a href="#" class="active">Personal Projects</a>
+      <a href="../resume.html">Resume</a>
+    </nav>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-label">Category</div>
+    <a class="sidebar-item active" data-filter="all" href="#">
+      🗂️ All Projects
+    </a>
+    <div id="sidebar-filters"></div>
+
+    <div class="sidebar-label">Quick Links</div>
+    <a class="sidebar-item" href="https://claude.ai" target="_blank">✨ Claude.ai</a>
+    <a class="sidebar-item" href="https://github.com/bryanstrobehn" target="_blank">🐙 GitHub</a>
+    <a class="sidebar-item" href="../index.html">🏠 Portfolio Site</a>
+  </div>
+
+  <!-- Main content -->
+  <div class="content">
+    <div class="content-header">
+      <div class="content-header-left">
+        <div class="content-title">Projects</div>
+        <div class="content-disclaimer">Some of these are polished. Others were vibe-coded at midnight and shipped before doubt could set in. All of them do the thing they're supposed to do. Mostly. Subject to change at any time for any reason.</div>
+      </div>
+      <div class="filter-row" id="filter-row">
+        <button class="filter-btn active" data-filter="all">All</button>
+      </div>
+    </div>
+
+    <div class="tile-grid" id="tile-grid">
+
+      <!-- BPM Finder -->
+      <a class="tile" href="bpm-finder.html" data-filter="tool">
+        <div class="tile-img-wrap">
+          <span class="tile-icon">🎵</span>
+          <div class="status-badge" data-status="live">Live</div>
+        </div>
+        <div class="tile-body">
+          <div class="tile-tags">
+            <span class="tile-tag-tool">Tool</span>
+            <span class="tile-tag-flavor">Music</span>
+          </div>
+          <div class="tile-name">BPM Finder</div>
+          <div class="tile-desc">Browser-based music analysis. BPM detection, tap tempo, waveform viz, stem breakdown.</div>
+          <div class="tile-launch">Launch →</div>
+        </div>
+      </a>
+
+      <!-- Grab -->
+      <a class="tile" href="grab.html" data-filter="tool">
+        <div class="tile-img-wrap">
+          <span class="tile-icon">🎥</span>
+          <div class="status-badge" data-status="live">Live</div>
+        </div>
+        <div class="tile-body">
+          <div class="tile-tags">
+            <span class="tile-tag-tool">Tool</span>
+            <span class="tile-tag-flavor">Screen Capture</span>
+          </div>
+          <div class="tile-name">Grab</div>
+          <div class="tile-desc">Minimal screen recorder. No account, no upload, no backend. Dark UI, auto-timestamped.</div>
+          <div class="tile-launch">Launch →</div>
+        </div>
+      </a>
+
+      <!-- MIDI Shaper -->
+      <a class="tile" href="midi-shaper.html" data-filter="tool">
+        <div class="tile-img-wrap">
+          <span class="tile-icon">🎹</span>
+          <div class="status-badge" data-status="live">Live</div>
+        </div>
+        <div class="tile-body">
+          <div class="tile-tags">
+            <span class="tile-tag-tool">Tool</span>
+            <span class="tile-tag-flavor">Music</span>
+          </div>
+          <div class="tile-name">MIDI Shaper</div>
+          <div class="tile-desc">Streamlines complex and bulk edits to MIDI files. Eventual merge candidate with BPM Finder.</div>
+          <div class="tile-launch">Launch →</div>
+        </div>
+      </a>
+
+      <!-- Treasure Fleet -->
+      <a class="tile" href="treasure-fleet.html" data-filter="fun">
+        <div class="tile-img-wrap">
+          <span class="tile-icon">🏴‍☠️</span>
+          <div class="status-badge" data-status="live">Live</div>
+        </div>
+        <div class="tile-body">
+          <div class="tile-tags">
+            <span class="tile-tag-fun">Fun</span>
+            <span class="tile-tag-flavor">Game Companion</span>
+          </div>
+          <div class="tile-name">Treasure Fleet</div>
+          <div class="tile-desc">Dice and companion app for a friend's board game. Small, weird, and exactly what was asked for.</div>
+          <div class="tile-launch">Launch →</div>
+        </div>
+      </a>
+
+      <!-- PM Portfolio -->
+      <a class="tile" href="https://bryanstrobehn.github.io" target="_blank" data-filter="work">
+        <div class="tile-img-wrap">
+          <span class="tile-icon">📁</span>
+          <div class="status-badge" data-status="live">Live</div>
+        </div>
+        <div class="tile-body">
+          <div class="tile-tags">
+            <span class="tile-tag-work">Work</span>
+            <span class="tile-tag-flavor">Career</span>
+          </div>
+          <div class="tile-name">PM Portfolio</div>
+          <div class="tile-desc">Case studies, resume, and project writeups. Built on GitHub Pages.</div>
+          <div class="tile-launch">Launch →</div>
+        </div>
+      </a>
+
+      <!-- Poop Tracker -->
+      <a class="tile" href="poop-tracker.html" data-filter="tool">
+        <div class="tile-img-wrap">
+          <span class="tile-icon">💩</span>
+          <div class="status-badge" data-status="live">Live</div>
+        </div>
+        <div class="tile-body">
+          <div class="tile-tags">
+            <span class="tile-tag-tool">Tool</span>
+            <span class="tile-tag-flavor">Health</span>
+          </div>
+          <div class="tile-name">Poop Tracker</div>
+          <div class="tile-desc">Pediatrician-requested Bristol scale tracker for kids. Fully local — no account, no backend, no cloud. Data lives on your device.</div>
+          <div class="tile-launch">Launch →</div>
+        </div>
+      </a>
+
+      <!-- Convert Stuff — read-only, not yet launchable -->
+      <div class="tile tile-readonly" data-filter="tool">
+        <div class="tile-img-wrap">
+          <span class="tile-icon">🔄</span>
+          <div class="status-badge" data-status="in-progress">In Progress</div>
+        </div>
+        <div class="tile-body">
+          <div class="tile-tags">
+            <span class="tile-tag-tool">Tool</span>
+            <span class="tile-tag-flavor">File Converter</span>
+          </div>
+          <div class="tile-name">Convert Stuff</div>
+          <div class="tile-desc">FFmpeg in the browser. Converts video to GIF, audio between WAV and MP3. Nothing leaves your machine.</div>
+          <div class="tile-launch">Launch →</div>
+        </div>
+      </div>
+
+      <!-- Telemetry QA — read-only, not yet launchable -->
+      <div class="tile tile-readonly" data-filter="work">
+        <div class="tile-img-wrap">
+          <span class="tile-icon">📡</span>
+          <div class="status-badge" data-status="in-progress">In Progress</div>
+        </div>
+        <div class="tile-body">
+          <div class="tile-tags">
+            <span class="tile-tag-work">Work</span>
+            <span class="tile-tag-flavor">Extension</span>
+          </div>
+          <div class="tile-name">Telemetry QA</div>
+          <div class="tile-desc">Surfaces analytics events inline without DevTools. GA4, Segment, Mixpanel, Amplitude.</div>
+          <div class="tile-launch">Launch →</div>
+        </div>
+      </div>
+
+      <!-- Placeholder slots, fading progressively — text assigned by JS -->
+      <div class="tile placeholder" style="opacity:0.42"><div class="tile-img-wrap"><span class="tile-icon">·</span></div><div class="tile-body"><div class="tile-tags"><span class="tile-tag-flavor">——</span></div><div class="tile-name placeholder-label"></div></div></div>
+      <div class="tile placeholder" style="opacity:0.34"><div class="tile-img-wrap"><span class="tile-icon">·</span></div><div class="tile-body"><div class="tile-tags"><span class="tile-tag-flavor">——</span></div><div class="tile-name placeholder-label"></div></div></div>
+      <div class="tile placeholder" style="opacity:0.27"><div class="tile-img-wrap"><span class="tile-icon">·</span></div><div class="tile-body"><div class="tile-tags"><span class="tile-tag-flavor">——</span></div><div class="tile-name placeholder-label"></div></div></div>
+      <div class="tile placeholder" style="opacity:0.21"><div class="tile-img-wrap"><span class="tile-icon">·</span></div><div class="tile-body"><div class="tile-tags"><span class="tile-tag-flavor">——</span></div><div class="tile-name placeholder-label"></div></div></div>
+      <div class="tile placeholder" style="opacity:0.16"><div class="tile-img-wrap"><span class="tile-icon">·</span></div><div class="tile-body"><div class="tile-tags"><span class="tile-tag-flavor">——</span></div><div class="tile-name placeholder-label"></div></div></div>
+      <div class="tile placeholder" style="opacity:0.11"><div class="tile-img-wrap"><span class="tile-icon">·</span></div><div class="tile-body"><div class="tile-tags"><span class="tile-tag-flavor">——</span></div><div class="tile-name placeholder-label"></div></div></div>
+      <div class="tile placeholder" style="opacity:0.07"><div class="tile-img-wrap"><span class="tile-icon">·</span></div><div class="tile-body"><div class="tile-tags"><span class="tile-tag-flavor">——</span></div><div class="tile-name placeholder-label"></div></div></div>
+      <div class="tile placeholder" style="opacity:0.04"><div class="tile-img-wrap"><span class="tile-icon">·</span></div><div class="tile-body"><div class="tile-tags"><span class="tile-tag-flavor">——</span></div><div class="tile-name placeholder-label"></div></div></div>
+      <div class="tile placeholder" style="opacity:0.02"><div class="tile-img-wrap"><span class="tile-icon">·</span></div><div class="tile-body"><div class="tile-tags"><span class="tile-tag-flavor">——</span></div><div class="tile-name placeholder-label"></div></div></div>
+
+    </div>
+  </div>
+
+  <!-- Statusbar -->
+  <div class="statusbar">
+    <div class="statusbar-pip"></div>
+    <span>bryanstrobehn.github.io/projects</span>
+    <span>·</span>
+    <span>6 live</span>
+    <span>·</span>
+    <span>2 in progress</span>
+  </div>
+
+</div><!-- /shell -->
+
+<script>
+  // ── Placeholder cheeky text ──
+  const PLACEHOLDER_LINES = [
+    'Room for more', 'Stay tuned', 'What goes here?',
+    'TBD (probably)', 'Watch this space', 'More incoming',
+    'Slot reserved', 'Loading…', 'Coming eventually',
+  ];
+  document.querySelectorAll('.placeholder-label').forEach((el, i) => {
+    el.textContent = PLACEHOLDER_LINES[i % PLACEHOLDER_LINES.length];
+  });
+
+  // ── Dynamic filter generation ──
+  const FILTER_META = {
+    tool: { label: 'Tools', icon: '🔧' },
+    fun:  { label: 'Fun',   icon: '🎮' },
+    work: { label: 'Work',  icon: '💼' },
+  };
+
+  const allTiles = Array.from(document.querySelectorAll('.tile:not(.placeholder)'));
+  const seenFilters = new Set();
+  allTiles.forEach(t => { if (t.dataset.filter) seenFilters.add(t.dataset.filter); });
+
+  const filterRow = document.getElementById('filter-row');
+  const sidebarFilters = document.getElementById('sidebar-filters');
+
+  seenFilters.forEach(key => {
+    const meta = FILTER_META[key] || { label: key, icon: '🔹' };
+
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn';
+    btn.dataset.filter = key;
+    btn.textContent = meta.label;
+    filterRow.appendChild(btn);
+
+    const link = document.createElement('a');
+    link.className = 'sidebar-item';
+    link.dataset.filter = key;
+    link.href = '#';
+    link.textContent = `${meta.icon} ${meta.label}`;
+    sidebarFilters.appendChild(link);
+  });
+
+  function applyFilter(filter) {
+    allTiles.forEach(tile => {
+      tile.classList.toggle('hidden', filter !== 'all' && tile.dataset.filter !== filter);
+    });
+  }
+
+  function setFilter(filter) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
+    document.querySelectorAll('.sidebar-item[data-filter]').forEach(s => s.classList.toggle('active', s.dataset.filter === filter));
+    applyFilter(filter);
+  }
+
+  filterRow.addEventListener('click', e => {
+    const btn = e.target.closest('.filter-btn');
+    if (btn) setFilter(btn.dataset.filter);
+  });
+
+  sidebarFilters.addEventListener('click', e => {
+    const item = e.target.closest('.sidebar-item[data-filter]');
+    if (item) { e.preventDefault(); setFilter(item.dataset.filter); }
+  });
+
+  document.querySelector('.sidebar-item[data-filter="all"]').addEventListener('click', e => {
+    e.preventDefault(); setFilter('all');
+  });
+</script>
+</body>
+</html>

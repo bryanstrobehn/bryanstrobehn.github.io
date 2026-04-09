@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Convert Stuff — Bryan Strobehn</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="logo">Bryan Strobehn</a>
+  <ul>
+    <li><a href="../index.html">About</a></li>
+    <li><a href="../work/index.html" class="active">Case Studies</a></li>
+    <li><a href="../projects/index.html">Personal Projects</a></li>
+    <li><a href="../resume.html">Resume</a></li>
+  </ul>
+</nav>
+
+<main>
+
+  <div class="section">
+    <p style="margin-bottom:0.5rem;">
+      <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+    </p>
+    <h3>Personal Project · 2026</h3>
+    <h1>Convert Stuff</h1>
+    <p style="font-size:1.05rem; max-width:600px; color:#374151;">
+      FFmpeg in the browser. No server, no account, no ads, no reason to feel vaguely surveilled.
+    </p>
+  </div>
+
+  <div class="cs-meta">
+    <div class="cs-meta-item">
+      <span class="label">Type</span>
+      <span class="value">Personal Project</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Stack</span>
+      <span class="value">Vanilla JS, FFmpeg.wasm</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Status</span>
+      <span class="value">In progress — pending HTTPS host</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Method</span>
+      <span class="value">AI-assisted prototyping (vibe coding)</span>
+    </div>
+  </div>
+
+  <div class="cs-cta">
+    <span class="cs-cta-label">LIVE PROJECT</span>
+    <a href="../projects/converter.html" class="cs-cta-btn">Try Convert Stuff →</a>
+  </div>
+
+  <div class="cs-section">
+    <h2>The Origin</h2>
+    <p>There's a certain kind of website that exists purely to make a simple task feel dangerous. You need to turn a .webm into a GIF. You find a converter. It works — but you spent the whole time wondering what else it was doing while you waited. The ads are aggressive. The UI looks like it was designed to confuse you into clicking the wrong button. You close the tab and feel mildly relieved.</p>
+    <p>That's the whole origin story here.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>What It Is</h2>
+    <p>Convert Stuff is a single HTML file that runs FFmpeg — compiled to WebAssembly — entirely in the browser. Nothing leaves your machine. There's no server receiving your files, no account, no ads, no reason to feel vaguely surveilled. Drop a file, get a file back, move on.</p>
+    <p>It lives alongside BPM Finder, Grab, and the rest of a small but growing set of tools built around a simple constraint: stay self-contained. No backends. No installs. No frameworks. The tools look like they belong to each other because they do — same dark palette, same monospace aesthetic, same philosophy about what a utility should feel like to use.</p>
+    <p>The GIF conversion uses a two-pass palette approach so the output actually looks good. The audio converter handles WAV and MP3 in both directions. Both work without ever asking you to trust a stranger's server with your files.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>Why It Isn't Live Yet</h2>
+    <p>FFmpeg.wasm requires cross-origin isolation headers to run in the browser — which means it needs to be served over HTTPS. It's a catch-22: I need to host it to use it, and I need to use it to confirm it's worth hosting. The plan is to push it to GitHub Pages alongside the rest of the toolset, where the headers can be set correctly. More soon.</p>
+  </div>
+
+  <div style="margin-top:3rem;">
+    <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+  </div>
+
+</main>
+
+<footer>
+  &copy; <span id="yr"></span> Bryan Strobehn &nbsp;·&nbsp; Cincinnati, OH
+</footer>
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+</body>
+</html>

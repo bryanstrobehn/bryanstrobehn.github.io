@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIDI Shaper</title>
+<style>
+:root {
+  --bg: #0e0e0f;
+  --surface: #191919;
+  --surface2: #202022;
+  --surface3: #2a2a2d;
+  --border: #2e2e33;
+  --border-hi: #42424a;
+  --accent: #c8f135;
+  --accent-dim: #8aaa22;
+  --accent-glow: rgba(200,241,53,0.1);
+  --text: #d4d4cf;
+  --text-mid: #909088;
+  --text-dim: #565650;
+  --danger: #ff5555;
+  --info: #5cc8ff;
+  --timing-col: #5cc8ff;
+  --pitch-col: #ff9f5c;
+  --len-col: #c45cff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Courier New',Courier,monospace;font-size:13px;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:32px 20px 100px;}
+header{width:100%;max-width:960px;margin-top:1.75rem;margin-bottom:24px;display:flex;align-items:baseline;gap:14px;}
+h1{font-size:13px;font-weight:normal;letter-spacing:0.15em;text-transform:uppercase;color:var(--accent);}
+.tagline{font-size:10px;color:var(--text-dim);letter-spacing:0.05em;}
+.main{width:100%;max-width:960px;display:flex;flex-direction:column;gap:10px;}
+
+#drop-zone{border:1px solid var(--border);border-radius:6px;padding:24px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;}
+#drop-zone:hover,#drop-zone.drag-over{border-color:var(--accent);background:var(--accent-glow);}
+#drop-zone.loaded{padding:12px 24px;border-color:var(--accent-dim);}
+.drop-icon{font-size:20px;margin-bottom:6px;opacity:.3;}
+#drop-zone.loaded .drop-icon{display:none;}
+.drop-label{color:var(--text-mid);font-size:11px;letter-spacing:.07em;}
+
+#file-meta-row{display:none;gap:0;align-items:center;padding:7px 12px;background:var(--surface);border:1px solid var(--border);border-radius:5px;font-size:11px;}
+.fm-item{color:var(--text-mid);padding:0 10px;}
+.fm-item:first-child{padding-left:0;color:var(--text);}
+.fm-sep{color:var(--border-hi);}
+
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:16px 20px;}
+.panel-header{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;}
+
+/* Tabbed viz */
+.viz-tabs{display:flex;gap:4px;margin-bottom:8px;}
+.viz-tab{font-family:inherit;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:3px;border:1px solid var(--border);background:transparent;cursor:pointer;transition:all .1s;}
+.viz-tab.vel{color:#c8f135;} .viz-tab.vel.active{background:rgba(200,241,53,0.12);border-color:#c8f135;}
+.viz-tab.tim{color:var(--timing-col);} .viz-tab.tim.active{background:rgba(92,200,255,0.1);border-color:var(--timing-col);}
+.viz-tab.len{color:var(--len-col);} .viz-tab.len.active{background:rgba(196,92,255,0.1);border-color:var(--len-col);}
+.viz-tab.pit{color:var(--pitch-col);} .viz-tab.pit.active{background:rgba(255,159,92,0.1);border-color:var(--pitch-col);}
+.viz-tab:not(.active){opacity:.45;}
+#viz-canvas{width:100%;height:100px;display:block;border-radius:4px;background:var(--surface2);}
+.viz-stats{font-size:10px;color:var(--text-dim);margin-top:5px;min-height:14px;}
+
+/* Op selector */
+#controls{display:none;}
+.op-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.op-row label{font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--text-mid);white-space:nowrap;}
+#op-select{background:var(--surface2);border:1px solid var(--border-hi);border-radius:4px;color:var(--accent);font-family:inherit;font-size:12px;letter-spacing:.03em;padding:6px 10px;outline:none;cursor:pointer;flex:1;max-width:300px;}
+#op-select:focus{border-color:var(--accent-dim);}
+#op-desc{font-size:11px;color:var(--text-mid);line-height:1.65;padding:8px 12px;background:var(--surface2);border-left:2px solid var(--border-hi);border-radius:0 4px 4px 0;margin-bottom:16px;min-height:34px;}
+#op-desc .op-tag{font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:1px 5px;border-radius:2px;margin-right:6px;vertical-align:middle;}
+.tag-vel{background:rgba(200,241,53,.15);color:var(--accent);}
+.tag-tim{background:rgba(92,200,255,.12);color:var(--timing-col);}
+.tag-len{background:rgba(196,92,255,.12);color:var(--len-col);}
+.tag-pit{background:rgba(255,159,92,.12);color:var(--pitch-col);}
+
+.op-panel{display:none;} .op-panel.active{display:block;}
+.control-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;}
+.control-grid.cols3{grid-template-columns:1fr 1fr 1fr;}
+.ctrl{display:flex;flex-direction:column;gap:6px;}
+.ctrl-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid);display:flex;justify-content:space-between;align-items:center;}
+.ctrl-label .val{font-size:12px;letter-spacing:0;font-weight:normal;}
+.val.vel{color:var(--accent);} .val.tim{color:var(--timing-col);} .val.len{color:var(--len-col);} .val.pit{color:var(--pitch-col);}
+.ctrl-hint{font-size:10px;color:var(--text-dim);margin-top:-1px;line-height:1.4;}
+input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:var(--border-hi);border-radius:2px;outline:none;cursor:pointer;}
+input[type=range].vel::-webkit-slider-thumb{background:var(--accent);}
+input[type=range].tim::-webkit-slider-thumb{background:var(--timing-col);}
+input[type=range].len::-webkit-slider-thumb{background:var(--len-col);}
+input[type=range].pit::-webkit-slider-thumb{background:var(--pitch-col);}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer;transition:transform .1s;}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.3);}
+select.ctrl-select{background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:inherit;font-size:11px;padding:5px 8px;outline:none;cursor:pointer;width:100%;}
+select.ctrl-select:focus{border-color:var(--accent-dim);}
+.note-info{font-size:10px;color:var(--text-dim);background:var(--surface2);padding:8px 10px;border-radius:4px;line-height:1.7;}
+
+.chain-panel{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin-top:14px;}
+.chain-header{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.chain-list{display:flex;flex-direction:column;gap:4px;}
+.chain-item{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text-mid);padding:4px 8px;border-radius:3px;background:var(--surface3);}
+.chain-item .cop{font-size:9px;letter-spacing:.08em;text-transform:uppercase;min-width:90px;}
+.chain-item .cpar{color:var(--text-dim);flex:1;font-size:10px;}
+.chain-item .crm{cursor:pointer;color:var(--text-dim);font-size:13px;padding:0 3px;}
+.chain-item .crm:hover{color:var(--danger);}
+.divider{height:1px;background:var(--border);margin:14px 0;}
+.actions{display:flex;gap:7px;margin-top:14px;flex-wrap:wrap;align-items:center;}
+button.btn{font-family:inherit;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .1s;border:1px solid var(--border-hi);background:transparent;color:var(--text-mid);}
+button.btn:hover{border-color:var(--text-mid);color:var(--text);}
+button.btn.primary{background:var(--accent);border-color:var(--accent);color:#0e0e0f;font-weight:bold;}
+button.btn.primary:hover{background:#d8ff50;}
+button.btn.chain-add{border-color:var(--accent-dim);color:var(--accent-dim);}
+button.btn.chain-add:hover{background:var(--accent-glow);border-color:var(--accent);color:var(--accent);}
+button.btn.download{border-color:var(--accent-dim);color:var(--accent);}
+button.btn.download:hover{background:var(--accent-glow);}
+button.btn:disabled{opacity:.25;cursor:not-allowed;}
+#status{font-size:11px;color:var(--text-dim);letter-spacing:.04em;margin-top:10px;min-height:15px;}
+#status.ok{color:var(--accent-dim);} #status.err{color:var(--danger);}
+</style>
+</head>
+<body>
+<!-- ── Project Nav ── -->
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body { padding-top: 44px; }
+  #pnav { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 1.25rem; background: #1c1c1e; border-bottom: 2px solid #2e2e32; font-family: 'Space Grotesk', system-ui, sans-serif; }
+  #pnav-back { font-size: 0.8rem; font-weight: 500; letter-spacing: 0.01em; color: #8e8e96; text-decoration: none; transition: color 0.12s; }
+  #pnav-back:hover { color: #e8e8ea; }
+  #pnav-btn { background: none; border: 1.5px solid #2e2e32; border-radius: 3px; color: #6e6e76; cursor: pointer; padding: 5px 7px; line-height: 0; transition: color 0.12s, border-color 0.12s, background 0.12s; }
+  #pnav-btn:hover, #pnav-btn.open { color: #e0e0e4; border-color: #4e4e54; background: #28282c; }
+  #pnav-pop { position: fixed; top: 48px; right: 1.25rem; background: #1c1c1e; border: 2px solid #3a3a3e; border-radius: 4px; padding: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: 272px; box-shadow: 0 12px 32px rgba(0,0,0,0.6); visibility: hidden; opacity: 0; pointer-events: none; transform: translateY(-6px); transition: opacity 0.14s, transform 0.14s; }
+  #pnav-pop.open { visibility: visible; opacity: 1; pointer-events: auto; transform: translateY(0); }
+  #pnav-pop a { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.75rem; border-radius: 3px; text-decoration: none; color: #b0b0b8; font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 0.82rem; font-weight: 500; transition: background 0.1s, color 0.1s; }
+  #pnav-pop a:hover { background: #28282c; color: #f0f0f2; }
+  #pnav-pop a.pnav-cur { background: #28282c; color: #f0f0f2; font-weight: 600; }
+</style>
+<div id="pnav">
+  <a href="index.html" id="pnav-back">← Back to Apps</a>
+  <button id="pnav-btn" aria-label="All projects">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><circle cx="1.5" cy="1.5" r="1.5"/><circle cx="7.5" cy="1.5" r="1.5"/><circle cx="13.5" cy="1.5" r="1.5"/><circle cx="1.5" cy="7.5" r="1.5"/><circle cx="7.5" cy="7.5" r="1.5"/><circle cx="13.5" cy="7.5" r="1.5"/><circle cx="1.5" cy="13.5" r="1.5"/><circle cx="7.5" cy="13.5" r="1.5"/><circle cx="13.5" cy="13.5" r="1.5"/></svg>
+  </button>
+  <div id="pnav-pop">
+    <a href="bpm-finder.html">🎵 BPM Finder</a>
+    <a href="converter.html">🔄 Converter</a>
+    <a href="grab.html">📹 Grab</a>
+    <a href="midi-shaper.html">🎹 MIDI Shaper</a>
+    <a href="poop-tracker.html">💩 Poop Tracker</a>
+    <a href="treasure-fleet.html">🗺️ Treasure Fleet</a>
+  </div>
+</div>
+<script>
+(function(){
+  var btn=document.getElementById('pnav-btn'),pop=document.getElementById('pnav-pop');
+  btn.addEventListener('click',function(e){e.stopPropagation();var o=pop.classList.toggle('open');btn.classList.toggle('open',o);});
+  document.addEventListener('click',function(){pop.classList.remove('open');btn.classList.remove('open');});
+  pop.addEventListener('click',function(e){e.stopPropagation();});
+  var cur=location.pathname.split('/').pop();
+  pop.querySelectorAll('a').forEach(function(a){if(decodeURIComponent(a.getAttribute('href'))===cur)a.classList.add('pnav-cur');});
+})();
+</script>
+
+<header>
+  <h1>MIDI Shaper</h1>
+  <span class="tagline">velocity · timing · length · pitch</span>
+</header>
+
+<div class="main">
+  <div id="drop-zone" onclick="document.getElementById('file-in').click()">
+    <div class="drop-icon">◈</div>
+    <div class="drop-label" id="drop-label">drop .mid file here &nbsp;/&nbsp; click to browse</div>
+    <input type="file" id="file-in" accept=".mid,.midi" style="display:none">
+  </div>
+
+  <div id="file-meta-row">
+    <span class="fm-item" id="fm-name"></span>
+    <span class="fm-sep">&nbsp;·&nbsp;</span>
+    <span class="fm-item" id="fm-notes"></span>
+    <span class="fm-sep">&nbsp;·&nbsp;</span>
+    <span class="fm-item" id="fm-tracks"></span>
+    <span class="fm-sep">&nbsp;·&nbsp;</span>
+    <span class="fm-item" id="fm-ppq"></span>
+  </div>
+
+  <div class="panel" id="viz-panel" style="display:none">
+    <div class="viz-tabs">
+      <button class="viz-tab vel active" onclick="setVizMode('vel',this)">velocity</button>
+      <button class="viz-tab tim" onclick="setVizMode('tim',this)">timing offset</button>
+      <button class="viz-tab len" onclick="setVizMode('len',this)">note length</button>
+      <button class="viz-tab pit" onclick="setVizMode('pit',this)">pitch</button>
+    </div>
+    <canvas id="viz-canvas"></canvas>
+    <div class="viz-stats" id="viz-stats"></div>
+  </div>
+
+  <div class="panel" id="controls">
+    <div class="op-row">
+      <label>mode</label>
+      <select id="op-select" onchange="switchOp(this.value)">
+        <optgroup label="── Velocity ──">
+          <option value="fade">Fade / Ramp</option>
+          <option value="swell">Swell</option>
+          <option value="staircase">Staircase</option>
+          <option value="accent">Accent Pattern</option>
+          <option value="compress">Compress Range</option>
+          <option value="expand">Expand Range</option>
+          <option value="limit">Limiter</option>
+          <option value="boost">Boost / Attenuate</option>
+          <option value="humanize">Humanize</option>
+          <option value="groove">Groove</option>
+          <option value="invert">Invert</option>
+          <option value="reverse">Reverse</option>
+          <option value="quantize">Quantize to Steps</option>
+          <option value="fixed">Set Fixed</option>
+          <option value="gate">Gate</option>
+          <option value="thin">Thin Notes</option>
+        </optgroup>
+        <optgroup label="── Timing ──">
+          <option value="swing">Swing / Shuffle</option>
+          <option value="timing-humanize">Timing Humanize</option>
+          <option value="timing-push">Push / Pull</option>
+          <option value="timing-nudge">Nudge All</option>
+        </optgroup>
+        <optgroup label="── Note Length ──">
+          <option value="len-set">Set Length</option>
+          <option value="len-scale">Scale Length</option>
+          <option value="len-fade">Fade Length</option>
+          <option value="len-humanize">Length Humanize</option>
+          <option value="len-legato">Make Legato</option>
+          <option value="len-staccato">Make Staccato</option>
+        </optgroup>
+        <optgroup label="── Pitch ──">
+          <option value="transpose">Transpose</option>
+          <option value="pitch-humanize">Pitch Humanize</option>
+          <option value="pitch-scale">Snap to Scale</option>
+          <option value="pitch-reverse">Reverse Pitch</option>
+          <option value="pitch-invert">Invert Melody</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div id="op-desc"></div>
+
+    <!-- ── VELOCITY OPS ────────────────────────────────── -->
+    <div class="op-panel active" id="op-fade">
+      <div class="control-grid">
+        <div class="ctrl"><div class="ctrl-label">start vel <span class="val vel" id="v-start-val">100</span></div><input type="range" class="vel" id="v-start" min="1" max="127" value="100" step="1" oninput="v('v-start-val',this.value);preview()"></div>
+        <div class="ctrl"><div class="ctrl-label">end vel <span class="val vel" id="v-end-val">1</span></div><input type="range" class="vel" id="v-end" min="1" max="127" value="1" step="1" oninput="v('v-end-val',this.value);preview()"></div>
+        <div class="ctrl"><div class="ctrl-label">curve</div><select class="ctrl-select" id="fade-curve" onchange="preview()"><option value="linear">linear</option><option value="exp">exponential</option><option value="log">logarithmic</option><option value="scurve">s-curve</option><option value="sine">sine</option></select></div>
+        <div class="ctrl"><div class="ctrl-label">apply to</div><select class="ctrl-select" id="fade-scope" onchange="preview()"><option value="all">all notes</option><option value="even">even notes only</option><option value="odd">odd notes only</option></select></div>
+      </div>
+    </div>
+
+    <div class="op-panel" id="op-swell">
+      <div class="control-grid">
+        <div class="ctrl"><div class="ctrl-label">peak vel <span class="val vel" id="sw-peak-val">110</span></div><input type="range" class="vel" id="sw-peak" min="1" max="127" value="110" step="1" oninput="v('sw-peak-val',this.value);preview()"></div>
+        <div class="ctrl"><div class="ctrl-label">floor vel <span class="val vel" id="sw-floor-val">20</span></div><input type="range" class="vel" id="sw-floor" min="1" max="127" value="20" step="1" oninput="v('sw-floor-val',this.value);preview()"></div>
+        <div class="ctrl"><div class="ctrl-label">peak position <span class="val vel" id="sw-pos-val">50%</span></div><input type="range" class="vel" id="sw-pos" min="10" max="90" value="50" step="1" oninput="v('sw-pos-val',this.value+'%');preview()"><div class="ctrl-hint">where the loudest point sits in the clip</div></div>
+        <div class="ctrl"><div class="ctrl-label">curve</div><select class="ctrl-select" id="sw-curve" onchange="preview()"><option value="sine">sine (smooth bell)</option><option value="linear">linear (triangle)</option><option value="exp">exp (sharp peak)</option></select></div>
+      </div>
+    </div>
+
+    <div class="op-panel" id="op-staircase">
+      <div class="control-grid">
+        <div class="ctrl"><div class="ctrl-label">steps <span class="val vel" id="stair-steps-val">4</span></div><input type="range" class="vel" id="stair-steps" min="2" max="16" value="4" step="1" oninput="v('stair-steps-val',this.value);preview()"><div class="ctrl-hint">number of distinct velocity levels</div></div>
+        <div class="ctrl"><div class="ctrl-label">direction</div><select class="ctrl-select" id="stair-dir" onchange="preview()"><option value="down">descending</option><option value="up">ascending</option><option value="bounce">bounce</option></select></div>
+        <div class="ctrl"><div class="ctrl-label">top vel <span class="val vel" id="stair-top-val">110</span></div><input type="range" class="vel" id="stair-top" min="10" max="127" value="110" step="1" oninput="v('stair-top-val',this.value);preview()"></div>
+        <div class="ctrl"><div class="ctrl-label">bottom vel <span class="val vel" id="stair-bot-val">20</span></div><input type="range" class="vel" id="stair-bot" min="1" max="80" value="20" step="1" oninput="v('stair-bot-val',this.value);preview()"></div>
+      </div>
+    </div>
+
+    <div class="op-panel" id="op-accent">
+      <div class="control-grid">
+        <div class="ctrl"><div class="ctrl-label">pattern</div><select class="ctrl-select" id="acc-pattern" onchange="preview()"><option value="4on1">4/4 beat 1</option><option value="4on13">4/4 beats 1+3</option><option value="4on24">4/4 beats 2+4 (backbeat)</option><option value="3on1">3/4 beat 1</option><option value="alt">every other</option><option value="alt3">every 3rd</option></select></div>
+        <div class="ctrl"><div class="ctrl-label">notes per beat <span class="val vel" id="acc-div-val">4</span></div><input type="range" class="vel" id="acc-div" min="1" max="8" value="4" step="1" oninput="v('acc-div-val',this.value);preview()"><div class="ctrl-hint">4 = 16th notes, 2 = 8th notes</div></div>
+        <div class="ctrl"><div class="ctrl-label">accent vel <span class="val vel" id="acc-hi-val">110</span></div><input type="range" class="vel" id="acc-hi" min="40" max="127" value="110" step="1" oninput="v('acc-hi-val',this.value);preview()"></div>
+        <div class="ctrl"><div class="ctrl-label">ghost vel <span class="val vel" id="acc-lo-val">50</span></div><input type="range" class="vel" id="acc-lo" min="1" max="100" value="50" step="1" oninput="v('acc-lo-val',this.value);preview()"></div>
+      </div>
+    </div>
+
+    <div class="op-panel" id="op-compress"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">output min <span class="val vel" id="cmp-min-val">30</span></div><input type="range" class="vel" id="cmp-min" min="1" max="100" value="30" step="1" oninput="v('cmp-min-val',this.value);preview()"></div>
+      <div class="ctrl"><div class="ctrl-label">output max <span class="val vel" id="cmp-max-val">100</span></div><input type="range" class="vel" id="cmp-max" min="10" max="127" value="100" step="1" oninput="v('cmp-max-val',this.value);preview()"></div>
+    </div></div>
+
+    <div class="op-panel" id="op-expand"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">expand to min <span class="val vel" id="exp-min-val">1</span></div><input type="range" class="vel" id="exp-min" min="1" max="60" value="1" step="1" oninput="v('exp-min-val',this.value);preview()"></div>
+      <div class="ctrl"><div class="ctrl-label">expand to max <span class="val vel" id="exp-max-val">127</span></div><input type="range" class="vel" id="exp-max" min="60" max="127" value="127" step="1" oninput="v('exp-max-val',this.value);preview()"></div>
+    </div><div class="ctrl-hint" style="margin-top:10px;">stretches the existing dynamic range outward — preserves relative differences between notes</div></div>
+
+    <div class="op-panel" id="op-limit"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">ceiling <span class="val vel" id="lim-ceil-val">100</span></div><input type="range" class="vel" id="lim-ceil" min="10" max="127" value="100" step="1" oninput="v('lim-ceil-val',this.value);preview()"><div class="ctrl-hint">hard clamp — notes above get cut</div></div>
+      <div class="ctrl"><div class="ctrl-label">floor <span class="val vel" id="lim-floor-val">1</span></div><input type="range" class="vel" id="lim-floor" min="0" max="60" value="1" step="1" oninput="v('lim-floor-val',this.value);preview()"><div class="ctrl-hint">notes below get lifted (0 = silence)</div></div>
+    </div></div>
+
+    <div class="op-panel" id="op-boost"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">amount <span class="val vel" id="boost-val">+20</span></div><input type="range" class="vel" id="boost-amt" min="-64" max="64" value="20" step="1" oninput="v('boost-val',(this.value>0?'+':'')+this.value);preview()"><div class="ctrl-hint">negative = reduce, positive = increase</div></div>
+      <div class="ctrl"><div class="ctrl-label">mode</div><select class="ctrl-select" id="boost-mode" onchange="preview()"><option value="add">additive (flat shift)</option><option value="multiply">multiplicative (proportional)</option></select></div>
+    </div></div>
+
+    <div class="op-panel" id="op-humanize"><div class="control-grid cols3">
+      <div class="ctrl"><div class="ctrl-label">amount <span class="val vel" id="hum-amt-val">18</span></div><input type="range" class="vel" id="hum-amt" min="1" max="64" value="18" step="1" oninput="v('hum-amt-val',this.value);preview()"><div class="ctrl-hint">max shift per note</div></div>
+      <div class="ctrl"><div class="ctrl-label">style</div><select class="ctrl-select" id="hum-style" onchange="preview()"><option value="bipolar">bipolar (up and down)</option><option value="soften">soften (shave peaks)</option><option value="accent">accent (lift some)</option><option value="natural">natural (weighted)</option></select></div>
+      <div class="ctrl"><div class="ctrl-label">seed <span class="val vel" id="hum-seed-val">42</span></div><input type="range" class="vel" id="hum-seed" min="1" max="99" value="42" step="1" oninput="v('hum-seed-val',this.value);preview()"><div class="ctrl-hint">change for different pattern</div></div>
+    </div></div>
+
+    <div class="op-panel" id="op-groove"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">depth <span class="val vel" id="grv-depth-val">30</span></div><input type="range" class="vel" id="grv-depth" min="0" max="60" value="30" step="1" oninput="v('grv-depth-val',this.value);preview()"><div class="ctrl-hint">how much on-beat notes stand out</div></div>
+      <div class="ctrl"><div class="ctrl-label">subdivision <span class="val vel" id="grv-sub-val">4</span></div><input type="range" class="vel" id="grv-sub" min="2" max="8" value="4" step="1" oninput="v('grv-sub-val',this.value);preview()"><div class="ctrl-hint">4 = 16th, 2 = 8th note groove</div></div>
+      <div class="ctrl"><div class="ctrl-label">humanize <span class="val vel" id="grv-hum-val">8</span></div><input type="range" class="vel" id="grv-hum" min="0" max="30" value="8" step="1" oninput="v('grv-hum-val',this.value);preview()"></div>
+      <div class="ctrl"><div class="ctrl-label">seed <span class="val vel" id="grv-seed-val">7</span></div><input type="range" class="vel" id="grv-seed" min="1" max="99" value="7" step="1" oninput="v('grv-seed-val',this.value);preview()"></div>
+    </div></div>
+
+    <div class="op-panel" id="op-invert"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">pivot point <span class="val vel" id="inv-mid-val">64</span></div><input type="range" class="vel" id="inv-mid" min="20" max="110" value="64" step="1" oninput="v('inv-mid-val',this.value);preview()"><div class="ctrl-hint">loud↔quiet swap around this velocity</div></div>
+    </div></div>
+
+    <div class="op-panel" id="op-reverse"><div class="note-info">Mirrors the velocity sequence. First note gets last note's velocity, last gets first's. Useful for reversing a fade without touching note order or timing.</div></div>
+
+    <div class="op-panel" id="op-quantize"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">levels <span class="val vel" id="qnt-levels-val">8</span></div><input type="range" class="vel" id="qnt-levels" min="2" max="24" value="8" step="1" oninput="v('qnt-levels-val',this.value);preview()"><div class="ctrl-hint">lower = more mechanical feel</div></div>
+      <div class="ctrl"><div class="ctrl-label">range min <span class="val vel" id="qnt-min-val">1</span></div><input type="range" class="vel" id="qnt-min" min="1" max="60" value="1" step="1" oninput="v('qnt-min-val',this.value);preview()"></div>
+      <div class="ctrl"><div class="ctrl-label">range max <span class="val vel" id="qnt-max-val">127</span></div><input type="range" class="vel" id="qnt-max" min="60" max="127" value="127" step="1" oninput="v('qnt-max-val',this.value);preview()"></div>
+    </div></div>
+
+    <div class="op-panel" id="op-fixed"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">velocity <span class="val vel" id="fix-val">80</span></div><input type="range" class="vel" id="fix-vel" min="1" max="127" value="80" step="1" oninput="v('fix-val',this.value);preview()"><div class="ctrl-hint">every note becomes exactly this</div></div>
+    </div></div>
+
+    <div class="op-panel" id="op-gate"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">threshold <span class="val vel" id="gate-thresh-val">40</span></div><input type="range" class="vel" id="gate-thresh" min="1" max="127" value="40" step="1" oninput="v('gate-thresh-val',this.value);preview()"><div class="ctrl-hint">notes below this get affected</div></div>
+      <div class="ctrl"><div class="ctrl-label">action</div><select class="ctrl-select" id="gate-action" onchange="preview()"><option value="silence">near-silence (vel 1)</option><option value="remove">delete note</option><option value="clamp">clamp to threshold</option></select></div>
+    </div></div>
+
+    <div class="op-panel" id="op-thin"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">keep every Nth <span class="val vel" id="thin-n-val">2nd</span></div><input type="range" class="vel" id="thin-n" min="2" max="8" value="2" step="1" oninput="v('thin-n-val',this.value+'th');preview()"><div class="ctrl-hint">deletes notes between — thins dense patterns</div></div>
+      <div class="ctrl"><div class="ctrl-label">offset <span class="val vel" id="thin-off-val">0</span></div><input type="range" class="vel" id="thin-off" min="0" max="7" value="0" step="1" oninput="v('thin-off-val',this.value);preview()"><div class="ctrl-hint">shifts which note counts as "first"</div></div>
+    </div></div>
+
+    <!-- ── TIMING OPS ──────────────────────────────────── -->
+    <div class="op-panel" id="op-swing"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">swing amount <span class="val tim" id="sw-amt-val">33%</span></div><input type="range" class="tim" id="sw-amt" min="0" max="66" value="33" step="1" oninput="v('sw-amt-val',this.value+'%');preview()"><div class="ctrl-hint">0% = straight, 33% = light shuffle, 66% = full triplet swing</div></div>
+      <div class="ctrl"><div class="ctrl-label">subdivision <span class="val tim" id="sw-sub-val">2</span></div><input type="range" class="tim" id="sw-sub" min="2" max="4" value="2" step="1" oninput="v('sw-sub-val',this.value);preview()"><div class="ctrl-hint">2 = 8th-note swing, 3 = triplet, 4 = 16th swing</div></div>
+    </div><div class="note-info" style="margin-top:12px;">Pushes every odd note forward in time. A 33% swing on 8th notes gives you a classic shuffled hi-hat feel. Timing only — velocity untouched.</div></div>
+
+    <div class="op-panel" id="op-timing-humanize"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">amount (ticks) <span class="val tim" id="th-amt-val">10</span></div><input type="range" class="tim" id="th-amt" min="1" max="80" value="10" step="1" oninput="v('th-amt-val',this.value);preview()"><div class="ctrl-hint">max timing nudge per note — 480 ticks = 1 quarter note</div></div>
+      <div class="ctrl"><div class="ctrl-label">seed <span class="val tim" id="th-seed-val">12</span></div><input type="range" class="tim" id="th-seed" min="1" max="99" value="12" step="1" oninput="v('th-seed-val',this.value);preview()"></div>
+      <div class="ctrl"><div class="ctrl-label">bias</div><select class="ctrl-select" id="th-bias" onchange="preview()"><option value="bipolar">bipolar (early and late)</option><option value="late">push late (laid-back)</option><option value="early">pull early (urgent)</option></select></div>
+    </div></div>
+
+    <div class="op-panel" id="op-timing-push"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">push amount <span class="val tim" id="tp-amt-val">0%</span></div><input type="range" class="tim" id="tp-amt" min="-50" max="50" value="0" step="1" oninput="v('tp-amt-val',(this.value>0?'+':'')+this.value+'%');preview()"><div class="ctrl-hint">pushes notes ahead (-) or behind (+) the beat as a percentage of the note spacing</div></div>
+      <div class="ctrl"><div class="ctrl-label">apply to</div><select class="ctrl-select" id="tp-scope" onchange="preview()"><option value="all">all notes</option><option value="even">even notes (off-beats)</option><option value="odd">odd notes (on-beats)</option></select></div>
+    </div></div>
+
+    <div class="op-panel" id="op-timing-nudge"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">nudge (ticks) <span class="val tim" id="tn-amt-val">0</span></div><input type="range" class="tim" id="tn-amt" min="-240" max="240" value="0" step="1" oninput="v('tn-amt-val',(this.value>0?'+':'')+this.value);preview()"><div class="ctrl-hint">shifts the entire clip earlier or later. 480 ticks = 1 quarter note</div></div>
+    </div></div>
+
+    <!-- ── LENGTH OPS ──────────────────────────────────── -->
+    <div class="op-panel" id="op-len-set"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">length (ticks) <span class="val len" id="ls-len-val">120</span></div><input type="range" class="len" id="ls-len" min="10" max="960" value="120" step="10" oninput="v('ls-len-val',this.value);preview()"><div class="ctrl-hint">480 = quarter note, 240 = 8th, 120 = 16th, 60 = 32nd</div></div>
+    </div></div>
+
+    <div class="op-panel" id="op-len-scale"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">scale <span class="val len" id="lsc-val">100%</span></div><input type="range" class="len" id="lsc-amt" min="10" max="300" value="100" step="5" oninput="v('lsc-val',this.value+'%');preview()"><div class="ctrl-hint">100% = unchanged. 200% = double length. 50% = half.</div></div>
+    </div></div>
+
+    <div class="op-panel" id="op-len-fade"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">start length (ticks) <span class="val len" id="lf-start-val">240</span></div><input type="range" class="len" id="lf-start" min="10" max="960" value="240" step="10" oninput="v('lf-start-val',this.value);preview()"></div>
+      <div class="ctrl"><div class="ctrl-label">end length (ticks) <span class="val len" id="lf-end-val">60</span></div><input type="range" class="len" id="lf-end" min="10" max="960" value="60" step="10" oninput="v('lf-end-val',this.value);preview()"></div>
+      <div class="ctrl"><div class="ctrl-label">curve</div><select class="ctrl-select" id="lf-curve" onchange="preview()"><option value="linear">linear</option><option value="exp">exponential</option><option value="sine">sine</option></select></div>
+    </div><div class="ctrl-hint" style="margin-top:10px;">Fades note durations from long to short (or vice versa). Good for making hi-hat tails shrink over a fill.</div></div>
+
+    <div class="op-panel" id="op-len-humanize"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">amount (ticks) <span class="val len" id="lh-amt-val">30</span></div><input type="range" class="len" id="lh-amt" min="1" max="120" value="30" step="1" oninput="v('lh-amt-val',this.value);preview()"><div class="ctrl-hint">max length variation per note</div></div>
+      <div class="ctrl"><div class="ctrl-label">seed <span class="val len" id="lh-seed-val">55</span></div><input type="range" class="len" id="lh-seed" min="1" max="99" value="55" step="1" oninput="v('lh-seed-val',this.value);preview()"></div>
+    </div></div>
+
+    <div class="op-panel" id="op-len-legato"><div class="note-info">Stretches each note to reach exactly the start of the next note. Creates a smooth, connected feel — like a legato keyboard performance. Last note keeps its original length.</div></div>
+
+    <div class="op-panel" id="op-len-staccato"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">length (% of original) <span class="val len" id="lst-val">25%</span></div><input type="range" class="len" id="lst-amt" min="5" max="90" value="25" step="5" oninput="v('lst-val',this.value+'%');preview()"><div class="ctrl-hint">shortens all notes to a percentage of their current duration</div></div>
+    </div></div>
+
+    <!-- ── PITCH OPS ───────────────────────────────────── -->
+    <div class="op-panel" id="op-transpose"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">semitones <span class="val pit" id="tr-semi-val">0</span></div><input type="range" class="pit" id="tr-semi" min="-24" max="24" value="0" step="1" oninput="v('tr-semi-val',(this.value>0?'+':'')+this.value);preview()"><div class="ctrl-hint">12 = up one octave, -12 = down one octave</div></div>
+    </div></div>
+
+    <div class="op-panel" id="op-pitch-humanize"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">amount (semitones) <span class="val pit" id="ph-amt-val">1</span></div><input type="range" class="pit" id="ph-amt" min="1" max="6" value="1" step="1" oninput="v('ph-amt-val',this.value);preview()"><div class="ctrl-hint">randomly shifts some notes up/down by this many semitones</div></div>
+      <div class="ctrl"><div class="ctrl-label">density <span class="val pit" id="ph-dens-val">30%</span></div><input type="range" class="pit" id="ph-dens" min="5" max="100" value="30" step="5" oninput="v('ph-dens-val',this.value+'%');preview()"><div class="ctrl-hint">what percentage of notes get shifted</div></div>
+      <div class="ctrl"><div class="ctrl-label">seed <span class="val pit" id="ph-seed-val">21</span></div><input type="range" class="pit" id="ph-seed" min="1" max="99" value="21" step="1" oninput="v('ph-seed-val',this.value);preview()"></div>
+    </div></div>
+
+    <div class="op-panel" id="op-pitch-scale">
+      <div class="control-grid">
+        <div class="ctrl"><div class="ctrl-label">root note</div><select class="ctrl-select" id="ps-root" onchange="preview()"><option value="0">C</option><option value="1">C#/Db</option><option value="2">D</option><option value="3">D#/Eb</option><option value="4">E</option><option value="5">F</option><option value="6">F#/Gb</option><option value="7">G</option><option value="8">G#/Ab</option><option value="9">A</option><option value="10">A#/Bb</option><option value="11">B</option></select></div>
+        <div class="ctrl"><div class="ctrl-label">scale</div><select class="ctrl-select" id="ps-scale" onchange="preview()"><option value="major">major</option><option value="minor">natural minor</option><option value="dorian">dorian</option><option value="phrygian">phrygian</option><option value="lydian">lydian</option><option value="mixolydian">mixolydian</option><option value="locrian">locrian</option><option value="harmonic">harmonic minor</option><option value="pentatonic">pentatonic major</option><option value="minpen">pentatonic minor</option><option value="blues">blues</option><option value="chromatic">chromatic (all)</option></select></div>
+      </div>
+      <div class="note-info" style="margin-top:12px;">Snaps every note to the nearest note in the chosen scale. Out-of-key notes get moved up or down by the minimum amount to land in scale.</div>
+    </div>
+
+    <div class="op-panel" id="op-pitch-reverse"><div class="note-info">Reverses the pitch sequence while keeping timing and velocity in place. The melody plays backwards in terms of notes but forward in time. Good for creating retrograde phrases.</div></div>
+
+    <div class="op-panel" id="op-pitch-invert"><div class="control-grid">
+      <div class="ctrl"><div class="ctrl-label">axis note <span class="val pit" id="pi-axis-val">C4 (60)</span></div><input type="range" class="pit" id="pi-axis" min="36" max="84" value="60" step="1" oninput="v('pi-axis-val',midiNoteName(+this.value)+' ('+this.value+')');preview()"><div class="ctrl-hint">melody reflects around this pitch — high notes go low, low go high</div></div>
+    </div></div>
+
+    <div class="divider"></div>
+    <div class="actions">
+      <button class="btn primary" onclick="applyOp()">Apply</button>
+      <button class="btn chain-add" onclick="addToChain()">+ Chain</button>
+      <button class="btn" onclick="resetAll()">Reset</button>
+      <button class="btn download" id="dl-btn" onclick="downloadMidi()" disabled>Download .mid</button>
+    </div>
+
+    <div class="chain-panel" id="chain-panel" style="display:none">
+      <div class="chain-header"><span>operation chain</span><button class="btn" style="padding:3px 10px;font-size:9px" onclick="runChain()">Run all</button></div>
+      <div class="chain-list" id="chain-list"></div>
+    </div>
+    <div id="status"></div>
+  </div>
+</div>
+
+<script>
+// ── MIDI parser/writer ────────────────────────────────────────────────────────
+function readVarLen(d,pos){let val=0,b;do{b=d[pos++];val=(val<<7)|(b&0x7f);}while(b&0x80);return{val,pos};}
+function writeVarLen(val){if(val<0x80)return[val];const out=[];let f=true;while(val>0){const b=val&0x7f;val>>=7;f?(out.unshift(b),f=false):out.unshift(b|0x80);}return out;}
+function parseMidi(buf){
+  const d=new Uint8Array(buf);let p=0;
+  const u32=()=>{const v=(d[p]<<24)|(d[p+1]<<16)|(d[p+2]<<8)|d[p+3];p+=4;return v;};
+  const u16=()=>{const v=(d[p]<<8)|d[p+1];p+=2;return v;};
+  const str=n=>{const s=String.fromCharCode(...d.slice(p,p+n));p+=n;return s;};
+  if(str(4)!=='MThd')throw new Error('Not a MIDI file');
+  u32();const fmt=u16(),nTrk=u16(),ppq=u16();
+  const tracks=[];
+  for(let t=0;t<nTrk;t++){
+    if(str(4)!=='MTrk')throw new Error('Bad track header');
+    const end=p+u32();const evs=[];let last=0;
+    while(p<end){
+      const{val:dt,pos:p1}=readVarLen(d,p);p=p1;
+      let st=d[p];
+      if(st&0x80){last=st;p++;}else st=last;
+      const tp=st&0xf0,ch=st&0x0f;
+      if(tp===0x80||tp===0x90){const nt=d[p++],vl=d[p++];evs.push({delta:dt,type:tp===0x90&&vl>0?'noteOn':'noteOff',channel:ch,note:nt,velocity:vl});}
+      else if(tp===0xa0)evs.push({delta:dt,type:'aftertouch',channel:ch,note:d[p++],pressure:d[p++]});
+      else if(tp===0xb0)evs.push({delta:dt,type:'cc',channel:ch,controller:d[p++],value:d[p++]});
+      else if(tp===0xc0)evs.push({delta:dt,type:'programChange',channel:ch,program:d[p++]});
+      else if(tp===0xd0)evs.push({delta:dt,type:'channelPressure',channel:ch,pressure:d[p++]});
+      else if(tp===0xe0)evs.push({delta:dt,type:'pitchBend',channel:ch,lsb:d[p++],msb:d[p++]});
+      else if(st===0xff){const mt=d[p++];const{val:ml,pos:p2}=readVarLen(d,p);p=p2;const md=Array.from(d.slice(p,p+ml));p+=ml;evs.push({delta:dt,type:'meta',metaType:mt,metaData:md});}
+      else if(st===0xf0||st===0xf7){const{val:sl,pos:p2}=readVarLen(d,p);p=p2;const sd=Array.from(d.slice(p,p+sl));p+=sl;evs.push({delta:dt,type:'sysex',sysData:sd});}
+      else{p=end;break;}
+    }
+    p=end;tracks.push(evs);
+  }
+  return{format:fmt,numTracks:nTrk,timeDivision:ppq,tracks};
+}
+function writeMidi(m){
+  const u32=v=>[(v>>24)&0xff,(v>>16)&0xff,(v>>8)&0xff,v&0xff];
+  const u16=v=>[(v>>8)&0xff,v&0xff];
+  const hdr=[0x4d,0x54,0x68,0x64,0,0,0,6,...u16(m.format),...u16(m.numTracks),...u16(m.timeDivision)];
+  const tc=m.tracks.map(evs=>{
+    const body=[];
+    for(const e of evs){
+      body.push(...writeVarLen(Math.max(0,e.delta)));
+      if(e.type==='noteOn')body.push(0x90|e.channel,e.note,e.velocity);
+      else if(e.type==='noteOff')body.push(0x80|e.channel,e.note,e.velocity||0);
+      else if(e.type==='aftertouch')body.push(0xa0|e.channel,e.note,e.pressure);
+      else if(e.type==='cc')body.push(0xb0|e.channel,e.controller,e.value);
+      else if(e.type==='programChange')body.push(0xc0|e.channel,e.program);
+      else if(e.type==='channelPressure')body.push(0xd0|e.channel,e.pressure);
+      else if(e.type==='pitchBend')body.push(0xe0|e.channel,e.lsb,e.msb);
+      else if(e.type==='meta')body.push(0xff,e.metaType,...writeVarLen(e.metaData.length),...e.metaData);
+      else if(e.type==='sysex')body.push(0xf0,...writeVarLen(e.sysData.length),...e.sysData);
+    }
+    return[0x4d,0x54,0x72,0x6b,...u32(body.length),...body];
+  });
+  return new Uint8Array([...hdr,...tc.flat()]);
+}
+
+// ── Note extraction (absolute time) ──────────────────────────────────────────
+function extractNotes(tracks){
+  // Returns [{ti,onIdx,offIdx,absTime,duration,note,velocity,channel}]
+  const notes=[];
+  tracks.forEach((evs,ti)=>{
+    let absTime=0;
+    const openNotes={};
+    evs.forEach((ev,ei)=>{
+      absTime+=ev.delta;
+      ev._abs=absTime;
+      if(ev.type==='noteOn'){
+        const key=ev.channel+'_'+ev.note;
+        if(!openNotes[key])openNotes[key]=[];
+        openNotes[key].push({ti,idx:ei,absTime,velocity:ev.velocity,note:ev.note,channel:ev.channel});
+      } else if(ev.type==='noteOff'||(ev.type==='noteOn'&&ev.velocity===0)){
+        const key=ev.channel+'_'+ev.note;
+        if(openNotes[key]&&openNotes[key].length){
+          const on=openNotes[key].shift();
+          notes.push({ti,onIdx:on.idx,offIdx:ei,absTime:on.absTime,duration:absTime-on.absTime,note:on.note,velocity:on.velocity,channel:on.channel});
+        }
+      }
+    });
+  });
+  notes.sort((a,b)=>a.absTime-b.absTime);
+  return notes;
+}
+
+// ── App state ─────────────────────────────────────────────────────────────────
+let midi=null, fileName='shaped.mid';
+let notes=[]; // extracted note objects
+let origNotes=[]; // deep copy of original state
+let currentOp='fade';
+let chain=[];
+let vizMode='vel';
+
+const SCALES={
+  major:[0,2,4,5,7,9,11],minor:[0,2,3,5,7,8,10],dorian:[0,2,3,5,7,9,10],
+  phrygian:[0,1,3,5,7,8,10],lydian:[0,2,4,6,7,9,11],mixolydian:[0,2,4,5,7,9,10],
+  locrian:[0,1,3,5,6,8,10],harmonic:[0,2,3,5,7,8,11],pentatonic:[0,2,4,7,9],
+  minpen:[0,3,5,7,10],blues:[0,3,5,6,7,10],chromatic:[0,1,2,3,4,5,6,7,8,9,10,11]
+};
+
+const NOTE_NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+function midiNoteName(n){return NOTE_NAMES[n%12]+(Math.floor(n/12)-1);}
+
+// ── File loading ──────────────────────────────────────────────────────────────
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0]);});
+document.getElementById('file-in').addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0]);});
+
+function loadFile(file){
+  fileName=file.name.replace(/\.midi?$/i,'_shaped.mid');
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      midi=parseMidi(e.target.result);
+      notes=extractNotes(midi.tracks);
+      origNotes=notes.map(n=>({...n}));
+      document.getElementById('drop-label').textContent=file.name;
+      dz.classList.add('loaded');
+      document.getElementById('file-meta-row').style.display='flex';
+      document.getElementById('fm-name').textContent=file.name;
+      document.getElementById('fm-notes').textContent=notes.length+' notes';
+      document.getElementById('fm-tracks').textContent=midi.numTracks+' track'+(midi.numTracks>1?'s':'');
+      document.getElementById('fm-ppq').textContent=midi.timeDivision+' ppq';
+      document.getElementById('viz-panel').style.display='block';
+      document.getElementById('controls').style.display='block';
+      renderViz();
+      chain=[];renderChain();
+      setStatus('loaded — preview updates live as you adjust controls','ok');
+    }catch(err){setStatus('parse error: '+err.message,'err');}
+  };
+  r.readAsArrayBuffer(file);
+}
+
+// ── RNG ───────────────────────────────────────────────────────────────────────
+function rng(seed){let s=seed|0;return()=>{s=(s*1664525+1013904223)&0xffffffff;return(s>>>0)/4294967296;};}
+
+// ── Clamps ────────────────────────────────────────────────────────────────────
+function cv(v){return Math.max(1,Math.min(127,Math.round(v)));}
+function cn(v){return Math.max(0,Math.min(127,Math.round(v)));}
+function g(id){return document.getElementById(id);}
+function v(id,val){const el=g(id);if(el)el.textContent=val;}
+function curve4(t,c){
+  switch(c){case'exp':return t*t;case'log':return t?Math.log(1+t*(Math.E-1)):0;case'scurve':return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;case'sine':return(1-Math.cos(t*Math.PI))/2;default:return t;}
+}
+
+// ── Compute modified notes ────────────────────────────────────────────────────
+function computeNotes(inputNotes){
+  const ns=inputNotes.map(n=>({...n}));
+  const n=ns.length; if(!n)return ns;
+
+  // ── velocity ops ──
+  if(currentOp==='fade'){
+    const vS=+g('v-start').value,vE=+g('v-end').value,cur=g('fade-curve').value,sc=g('fade-scope').value;
+    let idx=0;
+    ns.forEach((note,i)=>{
+      if(sc==='even'&&i%2!==1){return;}
+      if(sc==='odd'&&i%2!==0){return;}
+      const t=n>1?idx/(n-1):0;idx++;
+      note.velocity=cv(vS+(vE-vS)*curve4(t,cur));
+    });
+  }
+  else if(currentOp==='swell'){
+    const pk=+g('sw-peak').value,fl=+g('sw-floor').value,pos=+g('sw-pos').value/100,cur=g('sw-curve').value;
+    ns.forEach((_,i)=>{const t=n>1?i/(n-1):0;const dist=1-Math.abs(t-pos)/Math.max(pos,1-pos);ns[i].velocity=cv(fl+(pk-fl)*curve4(dist,cur));});
+  }
+  else if(currentOp==='staircase'){
+    const steps=+g('stair-steps').value,dir=g('stair-dir').value,top=+g('stair-top').value,bot=+g('stair-bot').value;
+    ns.forEach((_,i)=>{
+      let si=Math.min(Math.floor(i/n*steps),steps-1);
+      if(dir==='up')si=steps-1-si;
+      else if(dir==='bounce'){const h=Math.ceil(steps/2);si=si<h?si:steps-1-si;}
+      ns[i].velocity=cv(top+(bot-top)*(steps>1?si/(steps-1):0));
+    });
+  }
+  else if(currentOp==='accent'){
+    const pat=g('acc-pattern').value,div=+g('acc-div').value,hi=+g('acc-hi').value,lo=+g('acc-lo').value;
+    const pats={'4on1':[1,0,0,0],'4on13':[1,0,1,0],'4on24':[0,1,0,1],'3on1':[1,0,0],'alt':[1,0],'alt3':[1,0,0]};
+    const p=pats[pat]||[1,0];
+    ns.forEach((_,i)=>{const b=Math.floor(i/div)%p.length;ns[i].velocity=cv(p[b]?hi:lo);});
+  }
+  else if(currentOp==='compress'){
+    const oMn=+g('cmp-min').value,oMx=+g('cmp-max').value;
+    const src=ns.map(x=>x.velocity),sMn=Math.min(...src),sMx=Math.max(...src),sR=sMx-sMn||1;
+    ns.forEach(x=>{x.velocity=cv(oMn+(x.velocity-sMn)/sR*(oMx-oMn));});
+  }
+  else if(currentOp==='expand'){
+    const eMn=+g('exp-min').value,eMx=+g('exp-max').value;
+    const src=ns.map(x=>x.velocity),sMn=Math.min(...src),sMx=Math.max(...src),sR=sMx-sMn||1;
+    ns.forEach(x=>{x.velocity=cv(eMn+(x.velocity-sMn)/sR*(eMx-eMn));});
+  }
+  else if(currentOp==='limit'){
+    const ceil=+g('lim-ceil').value,floor=+g('lim-floor').value;
+    ns.forEach(x=>{x.velocity=cv(Math.min(ceil,Math.max(floor||1,x.velocity)));});
+  }
+  else if(currentOp==='boost'){
+    const amt=+g('boost-amt').value,mode=g('boost-mode').value;
+    ns.forEach(x=>{x.velocity=cv(mode==='multiply'?x.velocity*(1+amt/64):x.velocity+amt);});
+  }
+  else if(currentOp==='humanize'){
+    const amt=+g('hum-amt').value,style=g('hum-style').value,seed=+g('hum-seed').value;
+    const r=rng(seed*999);
+    ns.forEach(x=>{
+      const raw=(r()-.5)*2*amt;
+      const d=style==='bipolar'?raw:style==='soften'?-Math.abs(raw):style==='accent'?Math.abs(raw):raw*(r()<.6?-1:1)*.6;
+      x.velocity=cv(x.velocity+d);
+    });
+  }
+  else if(currentOp==='groove'){
+    const dep=+g('grv-depth').value,sub=+g('grv-sub').value,hum=+g('grv-hum').value,seed=+g('grv-seed').value;
+    const r=rng(seed*777);
+    ns.forEach((x,i)=>{const pos=i%sub;const ac=pos===0?dep:pos===sub/2?dep*.4:0;x.velocity=cv(x.velocity+ac+(r()-.5)*2*hum);});
+  }
+  else if(currentOp==='invert'){const mid=+g('inv-mid').value;ns.forEach(x=>{x.velocity=cv(mid-(x.velocity-mid));});}
+  else if(currentOp==='reverse'){const vels=ns.map(x=>x.velocity).reverse();ns.forEach((x,i)=>{x.velocity=vels[i];});}
+  else if(currentOp==='quantize'){
+    const lvl=+g('qnt-levels').value,qMn=+g('qnt-min').value,qMx=+g('qnt-max').value;
+    const step=(qMx-qMn)/(lvl-1);
+    ns.forEach(x=>{x.velocity=cv(qMn+Math.round((x.velocity-qMn)/step)*step);});
+  }
+  else if(currentOp==='fixed'){const fv=+g('fix-vel').value;ns.forEach(x=>{x.velocity=cv(fv);});}
+  else if(currentOp==='gate'){
+    const thr=+g('gate-thresh').value,act=g('gate-action').value;
+    ns.forEach(x=>{if(x.velocity<thr){if(act==='silence')x.velocity=1;else if(act==='remove')x.velocity=0;else x.velocity=cv(thr);}});
+  }
+  else if(currentOp==='thin'){
+    const tn=+g('thin-n').value,to=+g('thin-off').value;
+    ns.forEach((x,i)=>{if((i+to)%tn!==0)x.velocity=0;});
+  }
+
+  // ── timing ops ──
+  else if(currentOp==='swing'){
+    const amt=+g('sw-amt').value/100,sub=+g('sw-sub').value;
+    const ppq=midi.timeDivision;
+    const noteDur=ppq/sub;
+    ns.forEach((x,i)=>{if(i%2===1)x.absTime+=Math.round(noteDur*amt*2);});
+  }
+  else if(currentOp==='timing-humanize'){
+    const amt=+g('th-amt').value,seed=+g('th-seed').value,bias=g('th-bias').value;
+    const r=rng(seed*333);
+    ns.forEach(x=>{
+      const raw=(r()-.5)*2*amt;
+      const d=bias==='late'?Math.abs(raw):bias==='early'?-Math.abs(raw):raw;
+      x.absTime=Math.max(0,x.absTime+Math.round(d));
+    });
+  }
+  else if(currentOp==='timing-push'){
+    const pct=+g('tp-amt').value/100,sc=g('tp-scope').value;
+    if(n>1){
+      const gaps=ns.map((x,i)=>i<n-1?ns[i+1].absTime-x.absTime:midi.timeDivision);
+      ns.forEach((x,i)=>{
+        if(sc==='even'&&i%2!==1)return;
+        if(sc==='odd'&&i%2!==0)return;
+        x.absTime=Math.max(0,x.absTime+Math.round(gaps[i]*pct));
+      });
+    }
+  }
+  else if(currentOp==='timing-nudge'){
+    const amt=+g('tn-amt').value;
+    ns.forEach(x=>{x.absTime=Math.max(0,x.absTime+amt);});
+  }
+
+  // ── length ops ──
+  else if(currentOp==='len-set'){const l=+g('ls-len').value;ns.forEach(x=>{x.duration=Math.max(1,l);});}
+  else if(currentOp==='len-scale'){const sc=+g('lsc-amt').value/100;ns.forEach(x=>{x.duration=Math.max(1,Math.round(x.duration*sc));});}
+  else if(currentOp==='len-fade'){
+    const lS=+g('lf-start').value,lE=+g('lf-end').value,cur=g('lf-curve').value;
+    ns.forEach((_,i)=>{const t=n>1?i/(n-1):0;ns[i].duration=Math.max(1,Math.round(lS+(lE-lS)*curve4(t,cur)));});
+  }
+  else if(currentOp==='len-humanize'){
+    const amt=+g('lh-amt').value,seed=+g('lh-seed').value;
+    const r=rng(seed*555);
+    ns.forEach(x=>{x.duration=Math.max(1,Math.round(x.duration+(r()-.5)*2*amt));});
+  }
+  else if(currentOp==='len-legato'){
+    for(let i=0;i<n-1;i++)ns[i].duration=ns[i+1].absTime-ns[i].absTime;
+  }
+  else if(currentOp==='len-staccato'){const sc=+g('lst-amt').value/100;ns.forEach(x=>{x.duration=Math.max(1,Math.round(x.duration*sc));});}
+
+  // ── pitch ops ──
+  else if(currentOp==='transpose'){const s=+g('tr-semi').value;ns.forEach(x=>{x.note=cn(x.note+s);});}
+  else if(currentOp==='pitch-humanize'){
+    const amt=+g('ph-amt').value,dens=+g('ph-dens').value/100,seed=+g('ph-seed').value;
+    const r=rng(seed*444);
+    ns.forEach(x=>{if(r()<dens){const d=Math.round((r()-.5)*2*amt)||1;x.note=cn(x.note+d);}});
+  }
+  else if(currentOp==='pitch-scale'){
+    const root=+g('ps-root').value,scl=SCALES[g('ps-scale').value]||SCALES.major;
+    ns.forEach(x=>{
+      const oct=Math.floor(x.note/12)*12;
+      const pc=x.note%12;
+      let best=scl[0],bestDist=12;
+      for(const s of scl){
+        const d=Math.abs(s-pc);const d2=Math.min(d,12-d);
+        if(d2<bestDist){bestDist=d2;best=s;}
+      }
+      x.note=cn(oct+best);
+    });
+  }
+  else if(currentOp==='pitch-reverse'){const pitches=ns.map(x=>x.note).reverse();ns.forEach((x,i)=>{x.note=pitches[i];});}
+  else if(currentOp==='pitch-invert'){
+    const axis=+g('pi-axis').value;
+    ns.forEach(x=>{x.note=cn(axis-(x.note-axis));});
+  }
+
+  return ns;
+}
+
+// ── Write modified notes back to MIDI ────────────────────────────────────────
+function applyNotesToMidi(modNotes){
+  // Rebuild each track from scratch using absolute times
+  midi.tracks=midi.tracks.map((origEvs,ti)=>{
+    // Keep non-note events
+    const nonNote=origEvs.filter(e=>e.type!=='noteOn'&&e.type!=='noteOff');
+    // Get note events for this track
+    const trackNotes=modNotes.filter(n=>n.ti===ti);
+    const newEvs=[];
+    // noteOn + noteOff pairs
+    trackNotes.forEach(n=>{
+      if(n.velocity===0)return; // deleted
+      newEvs.push({_abs:n.absTime,type:'noteOn',channel:n.channel,note:n.note,velocity:n.velocity,delta:0});
+      newEvs.push({_abs:n.absTime+n.duration,type:'noteOff',channel:n.channel,note:n.note,velocity:0,delta:0});
+    });
+    // Merge with non-note events
+    nonNote.forEach(e=>newEvs.push(e));
+    newEvs.sort((a,b)=>a._abs-b._abs);
+    // Convert back to delta times
+    let last=0;
+    newEvs.forEach(e=>{e.delta=Math.max(0,(e._abs||0)-last);last=(e._abs||0);});
+    return newEvs;
+  });
+}
+
+// ── Preview / Apply / Reset ───────────────────────────────────────────────────
+let previewNotes=[];
+function preview(){
+  if(!midi)return;
+  previewNotes=computeNotes(origNotes);
+  renderViz();
+  const vels=previewNotes.filter(x=>x.velocity>0).map(x=>x.velocity);
+  const stats=[];
+  if(vels.length)stats.push('vel '+Math.min(...vels)+'–'+Math.max(...vels));
+  const durs=previewNotes.map(x=>x.duration);
+  if(durs.length)stats.push('len '+Math.min(...durs)+'–'+Math.max(...durs)+' ticks');
+  g('viz-stats').textContent=stats.join('  ·  ');
+}
+
+function applyOp(){
+  if(!midi)return;
+  const mod=computeNotes(origNotes);
+  applyNotesToMidi(mod);
+  origNotes=mod.map(n=>({...n}));
+  notes=origNotes;
+  previewNotes=origNotes;
+  renderViz();
+  g('dl-btn').disabled=false;
+  setStatus('applied · download when ready','ok');
+}
+
+function resetAll(){
+  if(!midi)return;
+  origNotes=extractNotes(midi.tracks.map(()=>[])); // won't work — need original
+  // Re-parse from scratch would need stored buffer; instead reload note state from current midi
+  // Simpler: we store origNotes separately from the start
+  origNotes=notes.map(n=>({...n})); // fallback: can't truly undo past applies without buffer
+  setStatus('note: full reset requires reloading the file. Reload to start fresh.','');
+  g('dl-btn').disabled=true;
+  chain=[];renderChain();
+}
+
+function downloadMidi(){
+  applyNotesToMidi(previewNotes.length?previewNotes:origNotes);
+  const bytes=writeMidi(midi);
+  const blob=new Blob([bytes],{type:'audio/midi'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=fileName;a.click();
+  setStatus('downloaded → drag back into Ableton','ok');
+}
+
+// ── Chain ─────────────────────────────────────────────────────────────────────
+function captureParams(){
+  const p={};const el=g('op-'+currentOp);if(!el)return p;
+  el.querySelectorAll('input,select').forEach(e=>{p[e.id]=e.value;});return p;
+}
+function addToChain(){
+  if(!midi)return;
+  chain.push({op:currentOp,params:captureParams()});
+  renderChain();setStatus('added to chain','ok');
+}
+function runChain(){
+  if(!midi||!chain.length)return;
+  const savedOp=currentOp;
+  let ns=origNotes.map(x=>({...x}));
+  for(const step of chain){
+    currentOp=step.op;
+    Object.entries(step.params).forEach(([id,val])=>{const e=g(id);if(e)e.value=val;});
+    ns=computeNotes(ns);
+  }
+  currentOp=savedOp;
+  applyNotesToMidi(ns);
+  origNotes=ns.map(x=>({...x}));
+  previewNotes=origNotes;
+  renderViz();g('dl-btn').disabled=false;
+  setStatus('chain ('+chain.length+' ops) applied','ok');
+}
+function removeChain(i){chain.splice(i,1);renderChain();}
+function renderChain(){
+  const list=g('chain-list'),panel=g('chain-panel');
+  panel.style.display=chain.length?'block':'none';
+  list.innerHTML='';
+  chain.forEach((step,i)=>{
+    const item=document.createElement('div');item.className='chain-item';
+    const ps=Object.entries(step.params).slice(0,3).map(([k,val])=>k.split('-').pop()+':'+val).join(' ');
+    item.innerHTML=`<span class="cop">${step.op}</span><span class="cpar">${ps}</span><span class="crm" onclick="removeChain(${i})">×</span>`;
+    list.appendChild(item);
+  });
+}
+
+// ── Visualization ─────────────────────────────────────────────────────────────
+function setVizMode(mode,btn){
+  vizMode=mode;
+  document.querySelectorAll('.viz-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderViz();
+}
+
+function renderViz(){
+  const canvas=g('viz-canvas');
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.offsetWidth,H=canvas.offsetHeight;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+  const ns=previewNotes.length?previewNotes:origNotes;
+  const orig=origNotes;
+  if(!ns.length)return;
+  const n=ns.length;
+  const pad=8;
+  const spacing=(W-pad*2)/n;
+  const bw=Math.max(2,Math.min(20,spacing-1.5));
+
+  // grid
+  ctx.strokeStyle='rgba(255,255,255,0.025)';ctx.lineWidth=1;
+  [.25,.5,.75,1].forEach(f=>{const y=H-pad-f*(H-pad*2);ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();});
+
+  if(vizMode==='vel'){
+    for(let i=0;i<n;i++){
+      const x=pad+i*spacing+(spacing-bw)/2;
+      const oh=((orig[i]?.velocity||0)/127)*(H-pad*2);
+      const mh=((ns[i]?.velocity||0)/127)*(H-pad*2);
+      if(oh>0){ctx.fillStyle='#243018';ctx.beginPath();ctx.roundRect(x,H-pad-oh,bw,oh,2);ctx.fill();}
+      if(ns[i]?.velocity>0){ctx.fillStyle=`rgba(200,241,53,${.8+.2*(ns[i].velocity/127)})`;ctx.beginPath();ctx.roundRect(x,H-pad-mh,bw,mh,2);ctx.fill();}
+      else if(ns[i]?.velocity===0&&orig[i]?.velocity>0){ctx.fillStyle='rgba(255,85,85,.4)';ctx.beginPath();ctx.roundRect(x,H-pad-3,bw,3,1);ctx.fill();}
+    }
+  }
+  else if(vizMode==='tim'){
+    // Show timing offsets as bars centered on midline
+    const offsets=ns.map((n,i)=>n.absTime-(orig[i]?.absTime||n.absTime));
+    const maxOff=Math.max(1,...offsets.map(Math.abs));
+    const mid=H/2;
+    ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.beginPath();ctx.moveTo(pad,mid);ctx.lineTo(W-pad,mid);ctx.stroke();
+    for(let i=0;i<n;i++){
+      const x=pad+i*spacing+(spacing-bw)/2;
+      const off=offsets[i];
+      const h=Math.abs(off)/maxOff*(H/2-pad);
+      ctx.fillStyle=off>=0?'rgba(92,200,255,0.8)':'rgba(255,159,92,0.8)';
+      ctx.beginPath();
+      if(off>=0)ctx.roundRect(x,mid-h,bw,h,1);
+      else ctx.roundRect(x,mid,bw,h,1);
+      ctx.fill();
+    }
+    // center label
+    ctx.fillStyle='rgba(255,255,255,0.12)';ctx.font='9px Courier New';ctx.textAlign='left';
+    ctx.fillText('on time',pad+2,mid-4);
+  }
+  else if(vizMode==='len'){
+    const maxDur=Math.max(1,...ns.map(x=>x.duration),...orig.map(x=>x.duration));
+    for(let i=0;i<n;i++){
+      const x=pad+i*spacing+(spacing-bw)/2;
+      const oh=(orig[i]?.duration||0)/maxDur*(H-pad*2);
+      const mh=ns[i].duration/maxDur*(H-pad*2);
+      if(oh>0){ctx.fillStyle='#2a1a3a';ctx.beginPath();ctx.roundRect(x,H-pad-oh,bw,oh,2);ctx.fill();}
+      ctx.fillStyle=`rgba(196,92,255,0.8)`;ctx.beginPath();ctx.roundRect(x,H-pad-mh,bw,mh,2);ctx.fill();
+    }
+  }
+  else if(vizMode==='pit'){
+    const allNotes=[...ns.map(x=>x.note),...orig.map(x=>x.note)];
+    const minN=Math.min(...allNotes),maxN=Math.max(...allNotes),rng2=maxN-minN||1;
+    for(let i=0;i<n;i++){
+      const x=pad+i*spacing+(spacing-bw)/2;
+      const oh=((orig[i]?.note||minN)-minN)/rng2*(H-pad*2);
+      const mh=(ns[i].note-minN)/rng2*(H-pad*2);
+      if(oh>=0){ctx.fillStyle='#2a1a0a';ctx.beginPath();ctx.roundRect(x,H-pad-oh-4,bw,6,2);ctx.fill();}
+      ctx.fillStyle='rgba(255,159,92,0.85)';ctx.beginPath();ctx.roundRect(x,H-pad-mh-4,bw,6,2);ctx.fill();
+      // note name
+      if(bw>=10&&n<=32){ctx.fillStyle='rgba(255,159,92,0.5)';ctx.font='7px Courier New';ctx.textAlign='center';ctx.fillText(NOTE_NAMES[ns[i].note%12],x+bw/2,H-pad-mh-8);}
+    }
+  }
+}
+
+// ── Op descriptions ───────────────────────────────────────────────────────────
+const DESCS={
+  fade:['vel','Ramps velocity from one level to another. Curve controls how it transitions.'],
+  swell:['vel','Builds to a peak then fades — a velocity swell. Control where the peak lands in the clip.'],
+  staircase:['vel','Divides into N blocks of equal velocity. Stepped dynamics instead of a smooth curve.'],
+  accent:['vel','Stamps a rhythmic accent pattern — louder on downbeats, quieter off-beats.'],
+  compress:['vel','Squeezes velocity range into a narrower window. Tighter, more even dynamics.'],
+  expand:['vel','Stretches the existing range outward. Quiet gets quieter, loud gets louder.'],
+  limit:['vel','Hard clamps at ceiling and floor — notes get cut or lifted, not scaled.'],
+  boost:['vel','Shifts all velocities up or down. Additive = flat shift. Multiplicative = proportional.'],
+  humanize:['vel','Adds controlled randomness to velocity. Seeded, so the same seed gives the same result.'],
+  groove:['vel','Beat-accent + humanize. On-beat notes lift, off-beat notes sit back.'],
+  invert:['vel','Flips dynamics. Loud becomes quiet and vice versa, around a pivot point.'],
+  reverse:['vel','Mirrors velocity sequence. First note gets last\'s velocity. Timing untouched.'],
+  quantize:['vel','Snaps velocities to N evenly-spaced steps. Lower = more mechanical.'],
+  fixed:['vel','Sets every note to exactly one velocity.'],
+  gate:['vel','Silences, removes, or clamps notes below a velocity threshold.'],
+  thin:['vel','Deletes every Nth note. Good for thinning dense hi-hat or chord patterns.'],
+  swing:['tim','Pushes every other note late, creating a shuffle feel. 0% = straight, 33% = light swing, 66% = heavy.'],
+  'timing-humanize':['tim','Randomly nudges note start times forward or backward. Biased late = laid-back. Early = urgent.'],
+  'timing-push':['tim','Shifts on-beat or off-beat notes ahead or behind as a percentage of note spacing.'],
+  'timing-nudge':['tim','Moves all notes earlier or later by a fixed number of ticks. 480 ticks = one quarter note.'],
+  'len-set':['len','Sets every note to exactly the same duration. 480 ticks = quarter note, 120 = 16th.'],
+  'len-scale':['len','Scales note durations by a percentage. 200% = twice as long, 50% = half.'],
+  'len-fade':['len','Fades note durations across the clip — from long to short or short to long.'],
+  'len-humanize':['len','Adds random variation to note durations. Makes robotic patterns feel more played.'],
+  'len-legato':['len','Stretches each note to reach the next one — connected, smooth feel.'],
+  'len-staccato':['len','Shortens all notes to a percentage of their duration — punchy, detached feel.'],
+  transpose:['pit','Shifts all notes up or down by semitones. 12 = one octave.'],
+  'pitch-humanize':['pit','Randomly shifts some notes up or down by a few semitones. Adds melodic variation.'],
+  'pitch-scale':['pit','Snaps every note to the nearest note in the chosen scale. Fixes out-of-key notes.'],
+  'pitch-reverse':['pit','Reverses the pitch sequence — melody plays backwards, timing stays forward.'],
+  'pitch-invert':['pit','Reflects the melody around an axis note. High notes go low, low goes high.'],
+};
+
+const TAG_CLASS={vel:'tag-vel',tim:'tag-tim',len:'tag-len',pit:'tag-pit'};
+const TAG_LABEL={vel:'velocity',tim:'timing',len:'length',pit:'pitch'};
+
+function switchOp(op){
+  currentOp=op;
+  document.querySelectorAll('.op-panel').forEach(p=>p.classList.remove('active'));
+  const panel=g('op-'+op);if(panel)panel.classList.add('active');
+  const desc=DESCS[op];
+  if(desc){
+    const [cat,txt]=desc;
+    g('op-desc').innerHTML=`<span class="op-tag ${TAG_CLASS[cat]}">${TAG_LABEL[cat]}</span>${txt}`;
+  }
+  preview();
+}
+function setStatus(msg,type){const el=g('status');el.textContent=msg;el.className=type||'';}
+window.addEventListener('resize',()=>{if(midi)renderViz();});
+switchOp('fade');
+
+// ── CURSOR COLOR FIELD ──
+// X: hue shifts 60° (yellow-green) → 165° (teal) across screen
+// Y: lightness dims slightly toward bottom
+var _mTick = false;
+document.addEventListener('mousemove', function(e) {
+  if (_mTick) return;
+  _mTick = true;
+  requestAnimationFrame(function() {
+    var xPct = e.clientX / window.innerWidth;
+    var yPct = e.clientY / window.innerHeight;
+    var hue   = Math.round(60  + xPct * 105);
+    var light = Math.round(58  - yPct * 12);
+    var sat   = Math.round(92  - yPct * 10);
+    var r = document.documentElement;
+    r.style.setProperty('--accent',      'hsl(' + hue + ',' + sat + '%,' + light + '%)');
+    r.style.setProperty('--accent-dim',  'hsl(' + hue + ',60%,' + Math.round(40 - yPct * 8) + '%)');
+    r.style.setProperty('--accent-glow', 'hsla(' + hue + ',' + sat + '%,' + light + '%, 0.1)');
+    document.body.style.backgroundImage =
+      'linear-gradient(hsla(' + hue + ',' + sat + '%,' + light + '%,0.015) 1px, transparent 1px),' +
+      'linear-gradient(90deg, hsla(' + hue + ',' + sat + '%,' + light + '%,0.015) 1px, transparent 1px)';
+    document.body.style.backgroundSize = '40px 40px';
+    _mTick = false;
+  });
+});
+</script>
+</body>
+</html>

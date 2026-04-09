@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grab</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0e0f;
+    --surface: #17171a;
+    --border: #2a2a30;
+    --text: #e8e8ea;
+    --muted: #6b6b75;
+    --muted-hover: #9b9ba5;
+    --accent: #ff3b30;
+    --accent-glow: rgba(255, 59, 48, 0.25);
+    --green: #30d158;
+    --green-glow: rgba(48, 209, 88, 0.2);
+    --blue: #0a84ff;
+  }
+
+  html, body {
+    width: 100vw; height: 100vh;
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .card {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: clamp(12px, 4vh, 40px);
+    position: relative;
+  }
+
+  .wordmark {
+    font-size: clamp(9px, 1.4vmin, 16px);
+    font-weight: 500; letter-spacing: 0.18em;
+    color: var(--muted); text-transform: uppercase;
+  }
+
+  /* ── Camera preview (hidden until cam mode) ── */
+  .cam-preview-wrap {
+    display: none;
+    position: relative;
+    width: clamp(120px, 22vmin, 200px);
+    aspect-ratio: 4/3;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .cam-preview-wrap.visible { display: block; }
+  .cam-preview-wrap video {
+    width: 100%; height: 100%; object-fit: cover;
+    transform: scaleX(-1);
+  }
+  .cam-badge {
+    position: absolute; bottom: 6px; right: 8px;
+    font-size: clamp(8px, 1vmin, 11px);
+    color: var(--muted); letter-spacing: 0.06em;
+  }
+
+  /* ── Ring + button ── */
+  .ring-wrap {
+    position: relative;
+    width: 22vmin; height: 22vmin;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ring-svg {
+    position: absolute; top: 0; left: 0;
+    width: 22vmin; height: 22vmin;
+    transform: rotate(-90deg);
+  }
+  .ring-track { fill: none; stroke: var(--border); stroke-width: 2; }
+  .ring-progress {
+    fill: none; stroke: var(--accent); stroke-width: 2.5;
+    stroke-linecap: round; stroke-dasharray: 308; stroke-dashoffset: 308;
+    transition: stroke-dashoffset 1s linear, stroke 0.3s;
+  }
+  .ring-progress.done-ring { stroke: var(--green); }
+
+  .rec-btn {
+    position: relative;
+    width: 18vmin; height: 18vmin;
+    border-radius: 50%; border: none; cursor: pointer;
+    background: var(--accent);
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    outline: none;
+  }
+  .rec-btn:hover { transform: scale(1.04); }
+  .rec-btn:active { transform: scale(0.97); }
+  .rec-btn.recording {
+    box-shadow: 0 0 0 2vmin var(--accent-glow);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  .rec-btn.done { background: var(--green); box-shadow: 0 0 0 2vmin var(--green-glow); animation: none; }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 1.5vmin var(--accent-glow); }
+    50%       { box-shadow: 0 0 0 3.5vmin rgba(255,59,48,0.08); }
+  }
+
+  .rec-icon {
+    width: 5vmin; height: 5vmin; background: white; border-radius: 50%;
+    transition: border-radius 0.2s, width 0.2s, height 0.2s;
+  }
+  .rec-btn.recording .rec-icon { border-radius: 1vmin; width: 4vmin; height: 4vmin; }
+  .rec-btn.done .rec-icon { display: none; }
+  .check {
+    display: none; width: 6vmin; height: 6vmin;
+    stroke: white; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; fill: none;
+  }
+  .rec-btn.done .check { display: block; }
+
+  /* ── Status + timer ── */
+  .status {
+    font-size: clamp(10px, 1.8vmin, 20px);
+    color: var(--muted); letter-spacing: 0.04em; text-align: center;
+    transition: color 0.2s;
+  }
+  .status.live { color: var(--accent); }
+  .status.done { color: var(--green); }
+  .status.warn { color: var(--muted-hover); }
+
+  .timer {
+    font-size: clamp(14px, 4vmin, 52px); font-weight: 500;
+    letter-spacing: -0.02em; color: var(--text);
+    text-align: center; line-height: 1; margin-top: 0.5vmin;
+  }
+
+  /* ── Controls tray ── */
+  .controls-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    gap: clamp(8px, 1.5vmin, 16px);
+    transition: opacity 0.2s;
+  }
+
+  .tray-toggle {
+    display: flex; align-items: center; gap: 6px;
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-family: 'DM Mono', monospace;
+    font-size: clamp(9px, 1.2vmin, 13px); letter-spacing: 0.06em;
+    transition: color 0.15s; padding: 4px 8px;
+  }
+  .tray-toggle:hover { color: var(--muted-hover); }
+  .tray-toggle svg { transition: transform 0.25s; }
+  .tray-toggle.open svg { transform: rotate(180deg); }
+
+  .tray {
+    display: grid; grid-template-rows: 0fr;
+    transition: grid-template-rows 0.28s ease;
+  }
+  .tray.open { grid-template-rows: 1fr; }
+  .tray-inner { overflow: hidden; }
+
+  .tray-row {
+    display: flex; align-items: center; gap: clamp(8px, 2vmin, 20px);
+    padding: clamp(8px, 1.5vmin, 14px) clamp(12px, 2vmin, 20px);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+
+  .pill-group {
+    display: flex; gap: 2px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 6px; padding: 2px;
+  }
+  .pill {
+    font-family: 'DM Mono', monospace;
+    font-size: clamp(8px, 1.1vmin, 12px); letter-spacing: 0.04em;
+    padding: clamp(3px, 0.6vmin, 6px) clamp(8px, 1.2vmin, 14px);
+    border: none; border-radius: 4px; cursor: pointer;
+    background: transparent; color: var(--muted);
+    transition: background 0.15s, color 0.15s;
+  }
+  .pill.active { background: var(--border); color: var(--text); }
+  .pill.cam-active { background: rgba(10,132,255,0.2); color: var(--blue); }
+
+  .icon-btn {
+    display: flex; align-items: center; gap: clamp(4px, 0.8vmin, 8px);
+    font-family: 'DM Mono', monospace;
+    font-size: clamp(8px, 1.1vmin, 12px); letter-spacing: 0.04em;
+    padding: clamp(3px, 0.6vmin, 6px) clamp(8px, 1.2vmin, 14px);
+    border: 1px solid var(--border); border-radius: 6px;
+    background: transparent; color: var(--muted); cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .icon-btn:hover { color: var(--text); border-color: var(--muted); }
+  .icon-btn.on { color: var(--text); border-color: var(--muted); }
+
+  .tray-divider {
+    width: 1px; height: clamp(14px, 2vmin, 22px);
+    background: var(--border); flex-shrink: 0;
+  }
+
+  /* mobile hint inside tray */
+  .mobile-note {
+    font-size: clamp(8px, 1.1vmin, 12px);
+    color: var(--muted); letter-spacing: 0.03em; line-height: 1.5;
+    text-align: center;
+  }
+
+  /* ── Download area ── */
+  .dl-area {
+    display: none; width: min(320px, 60vmin);
+    background: rgba(48,209,88,0.07);
+    border: 1px solid rgba(48,209,88,0.2);
+    border-radius: 10px;
+    padding: clamp(10px, 2vmin, 20px) clamp(12px, 2.5vmin, 24px);
+    flex-direction: column; gap: clamp(6px, 1vmin, 12px);
+  }
+  .dl-area.show { display: flex; }
+  .dl-label { font-size: clamp(9px, 1.2vmin, 14px); color: var(--green); letter-spacing: 0.08em; text-transform: uppercase; }
+  .dl-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; padding: clamp(8px, 1.5vmin, 14px);
+    border: none; border-radius: 8px; background: var(--green); color: #0e0e0f;
+    font-family: 'DM Mono', monospace; font-size: clamp(10px, 1.5vmin, 16px);
+    font-weight: 500; letter-spacing: 0.04em; cursor: pointer; transition: opacity 0.15s;
+  }
+  .dl-btn:hover { opacity: 0.88; }
+  .again-btn {
+    font-size: clamp(9px, 1.2vmin, 14px); color: var(--muted);
+    background: none; border: none; cursor: pointer;
+    font-family: 'DM Mono', monospace; letter-spacing: 0.04em;
+    text-align: center; text-decoration: underline; padding: 0; transition: color 0.15s;
+  }
+  .again-btn:hover { color: var(--text); }
+
+  /* ── About button + drawer ── */
+  .about-btn {
+    position: absolute; bottom: clamp(14px, 3vmin, 28px); right: clamp(16px, 3vmin, 28px);
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-family: 'DM Mono', monospace;
+    font-size: clamp(9px, 1.2vmin, 13px); letter-spacing: 0.08em;
+    transition: color 0.15s; padding: 4px;
+  }
+  .about-btn:hover { color: var(--muted-hover); }
+
+  .drawer-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 10;
+  }
+  .drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+  .drawer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #1c1c1f; border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    padding: clamp(20px, 4vmin, 40px) clamp(24px, 5vmin, 56px) clamp(24px, 5vmin, 48px);
+    transform: translateY(100%);
+    transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+    z-index: 11; max-width: 600px; margin: 0 auto;
+  }
+  .drawer.open { transform: translateY(0); }
+  .drawer-handle {
+    width: 36px; height: 4px; border-radius: 2px;
+    background: var(--border); margin: 0 auto clamp(16px, 3vmin, 28px);
+  }
+  .drawer h2 {
+    font-size: clamp(13px, 2vmin, 20px); font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text); margin-bottom: clamp(10px, 2vmin, 18px);
+  }
+  .drawer p {
+    font-size: clamp(10px, 1.4vmin, 15px); color: var(--muted);
+    line-height: 1.8; letter-spacing: 0.02em; margin-bottom: clamp(8px, 1.5vmin, 16px);
+  }
+  .drawer p:last-child { margin-bottom: 0; }
+  .drawer a { color: var(--muted-hover); text-decoration: underline; }
+  .drawer a:hover { color: var(--text); }
+  .drawer-close {
+    position: absolute; top: clamp(14px, 2.5vmin, 24px); right: clamp(16px, 3vmin, 28px);
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 18px; line-height: 1; transition: color 0.15s; padding: 4px;
+  }
+  .drawer-close:hover { color: var(--text); }
+  .drawer-meta {
+    margin-top: clamp(12px, 2.5vmin, 24px); padding-top: clamp(10px, 2vmin, 18px);
+    border-top: 1px solid var(--border);
+    font-size: clamp(9px, 1.1vmin, 12px); color: var(--muted); letter-spacing: 0.06em;
+  }
+</style>
+</head>
+<body>
+<!-- ── Project Nav ── -->
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body { padding-top: 44px; }
+  #pnav { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 1.25rem; background: #1c1c1e; border-bottom: 2px solid #2e2e32; font-family: 'Space Grotesk', system-ui, sans-serif; }
+  #pnav-back { font-size: 0.8rem; font-weight: 500; letter-spacing: 0.01em; color: #8e8e96; text-decoration: none; transition: color 0.12s; }
+  #pnav-back:hover { color: #e8e8ea; }
+  #pnav-btn { background: none; border: 1.5px solid #2e2e32; border-radius: 3px; color: #6e6e76; cursor: pointer; padding: 5px 7px; line-height: 0; transition: color 0.12s, border-color 0.12s, background 0.12s; }
+  #pnav-btn:hover, #pnav-btn.open { color: #e0e0e4; border-color: #4e4e54; background: #28282c; }
+  #pnav-pop { position: fixed; top: 48px; right: 1.25rem; background: #1c1c1e; border: 2px solid #3a3a3e; border-radius: 4px; padding: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: 272px; box-shadow: 0 12px 32px rgba(0,0,0,0.6); visibility: hidden; opacity: 0; pointer-events: none; transform: translateY(-6px); transition: opacity 0.14s, transform 0.14s; }
+  #pnav-pop.open { visibility: visible; opacity: 1; pointer-events: auto; transform: translateY(0); }
+  #pnav-pop a { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.75rem; border-radius: 3px; text-decoration: none; color: #b0b0b8; font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 0.82rem; font-weight: 500; transition: background 0.1s, color 0.1s; }
+  #pnav-pop a:hover { background: #28282c; color: #f0f0f2; }
+  #pnav-pop a.pnav-cur { background: #28282c; color: #f0f0f2; font-weight: 600; }
+</style>
+<div id="pnav">
+  <a href="index.html" id="pnav-back">← Back to Apps</a>
+  <button id="pnav-btn" aria-label="All projects">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><circle cx="1.5" cy="1.5" r="1.5"/><circle cx="7.5" cy="1.5" r="1.5"/><circle cx="13.5" cy="1.5" r="1.5"/><circle cx="1.5" cy="7.5" r="1.5"/><circle cx="7.5" cy="7.5" r="1.5"/><circle cx="13.5" cy="7.5" r="1.5"/><circle cx="1.5" cy="13.5" r="1.5"/><circle cx="7.5" cy="13.5" r="1.5"/><circle cx="13.5" cy="13.5" r="1.5"/></svg>
+  </button>
+  <div id="pnav-pop">
+    <a href="bpm-finder.html">🎵 BPM Finder</a>
+    <a href="converter.html">🔄 Converter</a>
+    <a href="grab.html">📹 Grab</a>
+    <a href="midi-shaper.html">🎹 MIDI Shaper</a>
+    <a href="poop-tracker.html">💩 Poop Tracker</a>
+    <a href="treasure-fleet.html">🗺️ Treasure Fleet</a>
+  </div>
+</div>
+<script>
+(function(){
+  var btn=document.getElementById('pnav-btn'),pop=document.getElementById('pnav-pop');
+  btn.addEventListener('click',function(e){e.stopPropagation();var o=pop.classList.toggle('open');btn.classList.toggle('open',o);});
+  document.addEventListener('click',function(){pop.classList.remove('open');btn.classList.remove('open');});
+  pop.addEventListener('click',function(e){e.stopPropagation();});
+  var cur=location.pathname.split('/').pop();
+  pop.querySelectorAll('a').forEach(function(a){if(decodeURIComponent(a.getAttribute('href'))===cur)a.classList.add('pnav-cur');});
+})();
+</script>
+<div class="card">
+  <span class="wordmark">Grab</span>
+
+  <!-- Camera preview (visible in cam mode before/during recording) -->
+  <div class="cam-preview-wrap" id="camPreviewWrap">
+    <video id="camPreview" autoplay muted playsinline></video>
+    <span class="cam-badge">preview</span>
+  </div>
+
+  <div class="ring-wrap">
+    <svg class="ring-svg" viewBox="0 0 108 108">
+      <circle class="ring-track" cx="54" cy="54" r="49"/>
+      <circle class="ring-progress" id="ringProg" cx="54" cy="54" r="49"/>
+    </svg>
+    <button class="rec-btn" id="recBtn" title="Start recording" onclick="handleClick()">
+      <div class="rec-icon"></div>
+      <svg class="check" viewBox="0 0 30 30"><polyline points="6,15 12,21 24,9"/></svg>
+    </button>
+  </div>
+
+  <div>
+    <div class="status" id="statusLine">click to capture screen</div>
+    <div class="timer" id="timerDisp" style="opacity:0">0:00</div>
+  </div>
+
+  <!-- Controls tray -->
+  <div class="controls-wrap" id="controlsWrap">
+    <button class="tray-toggle" id="trayToggle" onclick="toggleTray()">
+      options
+      <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+        <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div class="tray" id="tray">
+      <div class="tray-inner">
+        <div class="tray-row" id="trayRow">
+          <!-- populated by JS based on device -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Download -->
+  <div class="dl-area" id="dlArea">
+    <span class="dl-label">Ready to share</span>
+    <button class="dl-btn" id="dlBtn">↓ save recording</button>
+    <button class="again-btn" onclick="reset()">record another</button>
+  </div>
+
+  <button class="about-btn" onclick="openAbout()">about</button>
+</div>
+
+<!-- About drawer -->
+<div class="drawer-overlay" id="overlay" onclick="closeAbout()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-handle"></div>
+  <button class="drawer-close" onclick="closeAbout()">✕</button>
+  <h2>Grab</h2>
+  <p>Built out of a genuine moment of friction — needed to quickly show something on screen to friends in Signal and realized there was no tool that was just: open, click, done.</p>
+  <p>No account. No upload. No cloud. The recording stays on your machine and downloads as a <code style="color:var(--text);font-family:inherit">.webm</code> file you can drag straight into Slack, Signal, Discord, or wherever.</p>
+  <p>On mobile, screen capture isn't available — but camera recording works the same way. Same one-click flow, file lands in your downloads.</p>
+  <div class="drawer-meta">
+    screen &amp; camera · no backend · no account · open source
+  </div>
+</div>
+
+<script>
+const CIRCUMFERENCE = 308;
+const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+let mediaRecorder = null, chunks = [], stream = null, camStream = null;
+let startTime = null, timerInterval = null, blobUrl = null;
+let micEnabled = false;
+let maxSec = 30;
+let sourceMode = isMobile ? 'camera' : 'screen'; // 'screen'|'window'|'tab'|'camera'
+let camFacing = 'user'; // front cam default on mobile
+
+const btn          = document.getElementById('recBtn');
+const statusEl     = document.getElementById('statusLine');
+const timerEl      = document.getElementById('timerDisp');
+const ringProg     = document.getElementById('ringProg');
+const dlArea       = document.getElementById('dlArea');
+const dlBtn        = document.getElementById('dlBtn');
+const camWrap      = document.getElementById('camPreviewWrap');
+const camPreview   = document.getElementById('camPreview');
+const controlsWrap = document.getElementById('controlsWrap');
+const trayRow      = document.getElementById('trayRow');
+
+// ── Build tray based on device ──
+function buildTray() {
+  if (isMobile) {
+    trayRow.innerHTML = `
+      <span class="mobile-note">screen capture requires desktop</span>
+      <div class="tray-divider"></div>
+      <div class="pill-group" id="camFaceGroup">
+        <button class="pill cam-active" onclick="setCamFacing('user')">front</button>
+        <button class="pill" onclick="setCamFacing('environment')">rear</button>
+      </div>
+      <div class="tray-divider"></div>
+      <div class="pill-group" id="durGroup">
+        <button class="pill" onclick="setDuration(15)">15s</button>
+        <button class="pill active" onclick="setDuration(30)">30s</button>
+        <button class="pill" onclick="setDuration(60)">60s</button>
+      </div>`;
+    statusEl.textContent = 'click to record camera';
+    initCamPreview();
+  } else {
+    trayRow.innerHTML = `
+      <div class="pill-group" id="sourceGroup">
+        <button class="pill active" onclick="setSource('screen')">screen</button>
+        <button class="pill" onclick="setSource('window')">window</button>
+        <button class="pill" onclick="setSource('tab')">tab</button>
+        <button class="pill" onclick="setSource('camera')">camera</button>
+      </div>
+      <div class="tray-divider"></div>
+      <button class="icon-btn" id="micBtn" onclick="toggleMic()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+        mic
+      </button>
+      <div class="tray-divider"></div>
+      <div class="pill-group" id="durGroup">
+        <button class="pill" onclick="setDuration(15)">15s</button>
+        <button class="pill active" onclick="setDuration(30)">30s</button>
+        <button class="pill" onclick="setDuration(60)">60s</button>
+      </div>`;
+  }
+}
+
+// ── Camera preview (cam mode) ──
+async function initCamPreview() {
+  try {
+    if (camStream) camStream.getTracks().forEach(t => t.stop());
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: camFacing }, audio: false
+    });
+    camPreview.srcObject = camStream;
+    camWrap.classList.add('visible');
+    // mirror only front cam
+    camPreview.style.transform = camFacing === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
+  } catch(e) {
+    statusEl.textContent = 'camera not available.';
+  }
+}
+
+function stopCamPreview() {
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  camPreview.srcObject = null;
+  camWrap.classList.remove('visible');
+}
+
+function stopCamPreviewSoft() {
+  // detach preview without killing the underlying tracks (used when recording starts)
+  camPreview.srcObject = null;
+  camWrap.classList.remove('visible');
+}
+
+// ── Tray controls ──
+function toggleTray() {
+  document.getElementById('tray').classList.toggle('open');
+  document.getElementById('trayToggle').classList.toggle('open');
+}
+
+function setSource(src) {
+  sourceMode = src;
+  document.querySelectorAll('#sourceGroup .pill').forEach(p => {
+    p.classList.remove('active', 'cam-active');
+  });
+  event.target.classList.add(src === 'camera' ? 'cam-active' : 'active');
+
+  if (src === 'camera') {
+    statusEl.textContent = 'click to record camera';
+    statusEl.className = 'status';
+    initCamPreview();
+  } else {
+    stopCamPreview();
+    statusEl.textContent = 'click to capture screen';
+    statusEl.className = 'status';
+  }
+}
+
+function setCamFacing(facing) {
+  camFacing = facing;
+  document.querySelectorAll('#camFaceGroup .pill').forEach(p => p.classList.remove('cam-active', 'active'));
+  event.target.classList.add('cam-active');
+  initCamPreview();
+}
+
+function toggleMic() {
+  micEnabled = !micEnabled;
+  const mb = document.getElementById('micBtn');
+  if (mb) mb.classList.toggle('on', micEnabled);
+}
+
+function setDuration(s) {
+  maxSec = s;
+  document.querySelectorAll('#durGroup .pill').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// ── Recording ──
+function handleClick() {
+  if (btn.classList.contains('recording')) stopRecording();
+  else if (!btn.classList.contains('done')) startRecording();
+}
+
+async function startRecording() {
+  const isCamera = sourceMode === 'camera' || isMobile;
+
+  if (isCamera) {
+    try {
+      // reuse existing preview stream — no second permission prompt
+      if (!camStream) {
+        camStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: isMobile ? camFacing : 'user' }, audio: false
+        });
+      }
+      if (micEnabled) {
+        try {
+          const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream = new MediaStream([...camStream.getVideoTracks(), ...micStream.getAudioTracks()]);
+        } catch(e) { stream = new MediaStream(camStream.getVideoTracks()); }
+      } else {
+        stream = new MediaStream(camStream.getVideoTracks());
+      }
+      camPreview.srcObject = null; // detach preview without stopping tracks
+      camWrap.classList.remove('visible');
+    } catch(e) { statusEl.textContent = 'camera access denied.'; return; }
+  } else {
+    const videoConstraints = { frameRate: 30 };
+    if (sourceMode === 'tab') videoConstraints.displaySurface = 'browser';
+    else if (sourceMode === 'window') videoConstraints.displaySurface = 'window';
+    else videoConstraints.displaySurface = 'monitor';
+
+    try {
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: videoConstraints, audio: micEnabled });
+      if (micEnabled) {
+        try {
+          const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream = new MediaStream([...displayStream.getTracks(), ...micStream.getAudioTracks()]);
+        } catch(e) { stream = displayStream; }
+      } else {
+        stream = displayStream;
+      }
+    } catch(e) { statusEl.textContent = 'cancelled.'; return; }
+  }
+
+  chunks = [];
+  const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+  mediaRecorder = new MediaRecorder(stream, { mimeType: mime });
+  mediaRecorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  mediaRecorder.onstop = () => finalise(isCamera);
+  mediaRecorder.start(200);
+  if (!isCamera) stream.getVideoTracks()[0].onended = () => stopRecording();
+
+  startTime = Date.now();
+  btn.classList.add('recording');
+  statusEl.classList.add('live');
+  timerEl.style.opacity = '1';
+  ringProg.style.strokeDashoffset = CIRCUMFERENCE;
+  controlsWrap.style.opacity = '0.3';
+  controlsWrap.style.pointerEvents = 'none';
+
+  timerInterval = setInterval(() => {
+    const s = Math.floor((Date.now() - startTime) / 1000);
+    timerEl.textContent = Math.floor(s/60) + ':' + String(s % 60).padStart(2, '0');
+    ringProg.style.strokeDashoffset = Math.max(0, CIRCUMFERENCE - (s / maxSec) * CIRCUMFERENCE);
+    statusEl.textContent = 'recording · ' + (maxSec - s) + 's left';
+    if (s >= maxSec) stopRecording();
+  }, 250);
+}
+
+function stopRecording() {
+  clearInterval(timerInterval);
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+}
+
+function finalise(isCamera) {
+  const blob = new Blob(chunks, { type: 'video/webm' });
+  blobUrl = URL.createObjectURL(blob);
+
+  btn.classList.remove('recording');
+  btn.classList.add('done');
+  statusEl.classList.remove('live');
+  statusEl.classList.add('done');
+  statusEl.textContent = 'done.';
+  ringProg.style.strokeDashoffset = '0';
+  ringProg.classList.add('done-ring');
+  controlsWrap.style.display = 'none';
+  camWrap.classList.remove('visible');
+
+  const ts = new Date();
+  const stamp = ts.getFullYear() + '-'
+    + String(ts.getMonth()+1).padStart(2,'0') + '-'
+    + String(ts.getDate()).padStart(2,'0') + '_'
+    + String(ts.getHours()).padStart(2,'0')
+    + String(ts.getMinutes()).padStart(2,'0')
+    + String(ts.getSeconds()).padStart(2,'0');
+  const prefix = isCamera ? 'grab_cam_' : 'grab_scr_';
+
+  dlBtn.onclick = () => {
+    const a = document.createElement('a');
+    a.href = blobUrl; a.download = prefix + stamp + '.webm'; a.click();
+  };
+  dlArea.classList.add('show');
+}
+
+function reset() {
+  if (blobUrl) { URL.revokeObjectURL(blobUrl); blobUrl = null; }
+  chunks = [];
+  btn.classList.remove('recording', 'done');
+  statusEl.className = 'status';
+  statusEl.textContent = isMobile ? 'click to record camera' : 'click to capture screen';
+  timerEl.style.opacity = '0'; timerEl.textContent = '0:00';
+  ringProg.style.strokeDashoffset = CIRCUMFERENCE;
+  ringProg.classList.remove('done-ring');
+  dlArea.classList.remove('show');
+  controlsWrap.style.display = '';
+  controlsWrap.style.opacity = '';
+  controlsWrap.style.pointerEvents = '';
+  mediaRecorder = null;
+
+  if (sourceMode === 'camera' || isMobile) initCamPreview();
+}
+
+// ── About drawer ──
+function openAbout() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closeAbout() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// ── Init ──
+buildTray();
+</script>
+</body>
+</html>
