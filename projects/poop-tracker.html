@@ -1365,7 +1365,7 @@ async function generateReport() {
   const entryRows = [...sorted].reverse().map(e => {
     const colorObj=COLORS.find(c=>c.id===e.color)||{hex:'#888',label:e.color};
     const bristolObj=BRISTOL.find(b=>b.type===e.bristol)||{face:'💩',desc:''};
-    const photoHtml=e.photo?`<div style="margin-top:10px;"><img src="${e.photo}" style="max-width:340px;width:100%;border-radius:8px;object-fit:contain;border:1px solid #E8D5C0;display:block;" alt="Photo"></div>`:'';
+    const photoHtml=e.photo?`<div style="margin-top:10px;"><img src="${e.photo}" style="width:100%;border-radius:8px;object-fit:contain;border:1px solid #E8D5C0;display:block;" alt="Photo"></div>`:'';
     return `<div style="padding:14px 0;border-bottom:1px solid #EDD5BC;page-break-inside:avoid;">
       <div style="display:flex;align-items:flex-start;gap:10px;">
         <span style="font-size:22px;">${bristolObj.face}</span>
