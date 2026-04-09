@@ -370,6 +370,72 @@
   }
   .entry-actions { margin-top: 10px; display: flex; gap: 8px; justify-content: flex-end; }
 
+  /* ── EDIT FORM ── */
+  .edit-form {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1.5px solid var(--border);
+  }
+  .edit-form .edit-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .edit-form label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .edit-bristol-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .edit-bristol-item {
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 2px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--bg);
+    user-select: none;
+    font-size: 10px;
+  }
+  .edit-bristol-item:hover { border-color: var(--brown-light); background: var(--cream); }
+  .edit-bristol-item.selected { border-color: var(--accent); background: #FFF0E6; }
+  .edit-bristol-item .ebi-face { font-size: 20px; }
+  .edit-color-row {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;
+  }
+  .edit-color-swatch {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .edit-color-swatch:hover { transform: scale(1.1); }
+  .edit-color-swatch.selected { border-color: var(--brown-deep); box-shadow: 0 0 0 2px rgba(107,58,42,0.25); }
+  .edit-photo-preview {
+    margin-bottom: 8px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    position: relative;
+  }
+  .edit-photo-preview img {
+    width: 100%; max-height: 160px; object-fit: cover; display: block; border-radius: var(--radius-sm);
+  }
+  .edit-actions {
+    display: flex; gap: 8px; margin-top: 12px;
+  }
+
   /* ── DESKTOP STATS ── */
   .stats-row {
     display: grid;
@@ -487,45 +553,6 @@
 </style>
 </head>
 <body>
-<!-- ── Project Nav ── -->
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  body { padding-top: 44px; }
-  #pnav { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 1.25rem; background: #1c1c1e; border-bottom: 2px solid #2e2e32; font-family: 'Space Grotesk', system-ui, sans-serif; }
-  #pnav-back { font-size: 0.8rem; font-weight: 500; letter-spacing: 0.01em; color: #8e8e96; text-decoration: none; transition: color 0.12s; }
-  #pnav-back:hover { color: #e8e8ea; }
-  #pnav-btn { background: none; border: 1.5px solid #2e2e32; border-radius: 3px; color: #6e6e76; cursor: pointer; padding: 5px 7px; line-height: 0; transition: color 0.12s, border-color 0.12s, background 0.12s; }
-  #pnav-btn:hover, #pnav-btn.open { color: #e0e0e4; border-color: #4e4e54; background: #28282c; }
-  #pnav-pop { position: fixed; top: 48px; right: 1.25rem; background: #1c1c1e; border: 2px solid #3a3a3e; border-radius: 4px; padding: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: 272px; box-shadow: 0 12px 32px rgba(0,0,0,0.6); visibility: hidden; opacity: 0; pointer-events: none; transform: translateY(-6px); transition: opacity 0.14s, transform 0.14s; }
-  #pnav-pop.open { visibility: visible; opacity: 1; pointer-events: auto; transform: translateY(0); }
-  #pnav-pop a { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.75rem; border-radius: 3px; text-decoration: none; color: #b0b0b8; font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 0.82rem; font-weight: 500; transition: background 0.1s, color 0.1s; }
-  #pnav-pop a:hover { background: #28282c; color: #f0f0f2; }
-  #pnav-pop a.pnav-cur { background: #28282c; color: #f0f0f2; font-weight: 600; }
-</style>
-<div id="pnav">
-  <a href="index.html" id="pnav-back">← Back to Apps</a>
-  <button id="pnav-btn" aria-label="All projects">
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><circle cx="1.5" cy="1.5" r="1.5"/><circle cx="7.5" cy="1.5" r="1.5"/><circle cx="13.5" cy="1.5" r="1.5"/><circle cx="1.5" cy="7.5" r="1.5"/><circle cx="7.5" cy="7.5" r="1.5"/><circle cx="13.5" cy="7.5" r="1.5"/><circle cx="1.5" cy="13.5" r="1.5"/><circle cx="7.5" cy="13.5" r="1.5"/><circle cx="13.5" cy="13.5" r="1.5"/></svg>
-  </button>
-  <div id="pnav-pop">
-    <a href="bpm-finder.html">🎵 BPM Finder</a>
-    <a href="converter.html">🔄 Converter</a>
-    <a href="grab.html">📹 Grab</a>
-    <a href="midi-shaper.html">🎹 MIDI Shaper</a>
-    <a href="poop-tracker.html">💩 Poop Tracker</a>
-    <a href="treasure-fleet.html">🗺️ Treasure Fleet</a>
-  </div>
-</div>
-<script>
-(function(){
-  var btn=document.getElementById('pnav-btn'),pop=document.getElementById('pnav-pop');
-  btn.addEventListener('click',function(e){e.stopPropagation();var o=pop.classList.toggle('open');btn.classList.toggle('open',o);});
-  document.addEventListener('click',function(){pop.classList.remove('open');btn.classList.remove('open');});
-  pop.addEventListener('click',function(e){e.stopPropagation();});
-  var cur=location.pathname.split('/').pop();
-  pop.querySelectorAll('a').forEach(function(a){if(decodeURIComponent(a.getAttribute('href'))===cur)a.classList.add('pnav-cur');});
-})();
-</script>
 
 <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('log', this)">✏️ Log Entry</button>
@@ -956,13 +983,13 @@ function updateNudge() {
 // ── ENTRY CARD ────────────────────────────────────────────────────────────
 
 function entryCardHTML(e) {
-  const colorObj = COLORS.find(c => c.id === e.color) || { hex:'#888', label: e.color };
+  const colorObj   = COLORS.find(c => c.id === e.color) || { hex:'#888', label: e.color };
   const bristolObj = BRISTOL.find(b => b.type === e.bristol) || { face:'💩', desc:'' };
-  const dt = new Date(e.date+'T'+e.time);
+  const dt      = new Date(e.date+'T'+e.time);
   const dateStr = dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
   const timeStr = dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
   return `
-    <div class="entry-card">
+    <div class="entry-card" id="card-${e.id}">
       <div class="entry-header">
         <span style="font-size:22px;">${bristolObj.face}</span>
         <div style="flex:1;">
@@ -974,11 +1001,170 @@ function entryCardHTML(e) {
             </span>
           </div>
         </div>
-        <button class="btn btn-danger" onclick="deleteEntry('${e.id}')">✕</button>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-secondary" style="padding:6px 10px;font-size:12px;" onclick="openEdit('${e.id}')">✏️</button>
+          <button class="btn btn-danger" onclick="deleteEntry('${e.id}')">✕</button>
+        </div>
       </div>
       ${e.notes ? `<div class="entry-notes">📝 ${e.notes}</div>` : ''}
       ${e.photo ? `<div class="entry-photo"><img src="${e.photo}" alt="Photo" loading="lazy"></div>` : ''}
     </div>`;
+}
+
+// ── EDIT ──────────────────────────────────────────────────────────────────
+
+// Tracks pending photo changes during edit: null = no change, 'remove' = delete, base64 = new photo
+const editState = {};
+
+async function openEdit(id) {
+  const entries = getEntries();
+  const e = entries.find(x => x.id === id);
+  if (!e) return;
+
+  const photo = e.hasPhoto ? await getPhoto(id) : null;
+  editState[id] = { pendingPhoto: undefined }; // undefined = no change yet
+
+  const bristolOpts = BRISTOL.map(b => `
+    <div class="edit-bristol-item ${e.bristol===b.type?'selected':''}" id="ebi-${id}-${b.type}" onclick="editSelectBristol('${id}',${b.type})">
+      <div class="ebi-face">${b.face}</div>
+      <div style="font-size:9px;font-weight:700;color:var(--brown-deep);">Type ${b.type}</div>
+    </div>`).join('');
+
+  const colorOpts = COLORS.map(c => `
+    <div class="edit-color-swatch ${e.color===c.id?'selected':''}" id="ecs-${id}-${c.id}"
+         style="background:${c.hex};${c.id==='white'?'border-color:#ddd;':''}"
+         title="${c.label}" onclick="editSelectColor('${id}','${c.id}')"></div>`).join('');
+
+  const photoSection = `
+    <div id="edit-photo-section-${id}">
+      ${photo
+        ? `<div class="edit-photo-preview" id="edit-photo-preview-${id}">
+             <img src="${photo}" alt="Photo">
+             <button class="photo-remove" onclick="editRemovePhoto('${id}')">✕</button>
+           </div>`
+        : ''}
+      <div id="edit-photo-btns-${id}" style="display:${photo?'none':'grid'};grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="photo-btn" style="padding:10px 4px;">
+          <input type="file" accept="image/*" capture="environment" onchange="editHandlePhoto('${id}',this)">
+          <div class="ph-icon" style="font-size:18px;">📷</div>
+          <div class="ph-text">Take</div>
+        </div>
+        <div class="photo-btn" style="padding:10px 4px;">
+          <input type="file" accept="image/*" onchange="editHandlePhoto('${id}',this)">
+          <div class="ph-icon" style="font-size:18px;">🖼️</div>
+          <div class="ph-text">Gallery</div>
+        </div>
+      </div>
+    </div>`;
+
+  const form = `
+    <div class="edit-form" id="edit-form-${id}">
+      <div class="edit-row">
+        <div><label>Date</label><input type="date" id="edit-date-${id}" value="${e.date}" style="font-size:13px;padding:8px 10px;"></div>
+        <div><label>Time</label><input type="time" id="edit-time-${id}" value="${e.time}" style="font-size:13px;padding:8px 10px;"></div>
+      </div>
+      <label>Bristol Type</label>
+      <div class="edit-bristol-grid">${bristolOpts}</div>
+      <label>Color</label>
+      <div class="edit-color-row">${colorOpts}</div>
+      <label>Notes</label>
+      <textarea id="edit-notes-${id}" style="margin-bottom:10px;font-size:13px;">${e.notes||''}</textarea>
+      <label>Photo</label>
+      ${photoSection}
+      <div class="edit-actions">
+        <button class="btn btn-secondary" style="flex:1;justify-content:center;" onclick="cancelEdit('${id}')">Cancel</button>
+        <button class="btn btn-primary" style="flex:2;" onclick="saveEdit('${id}')">✅ Save Changes</button>
+      </div>
+    </div>`;
+
+  const card = document.getElementById('card-'+id);
+  // Remove any existing form first
+  const existing = card.querySelector('.edit-form');
+  if (existing) { existing.remove(); return; } // toggle closed if already open
+  card.insertAdjacentHTML('beforeend', form);
+  card.style.borderColor = 'var(--accent)';
+}
+
+function editSelectBristol(id, type) {
+  document.querySelectorAll(`[id^="ebi-${id}-"]`).forEach(el => el.classList.remove('selected'));
+  document.getElementById(`ebi-${id}-${type}`)?.classList.add('selected');
+}
+function editSelectColor(id, colorId) {
+  document.querySelectorAll(`[id^="ecs-${id}-"]`).forEach(el => el.classList.remove('selected'));
+  document.getElementById(`ecs-${id}-${colorId}`)?.classList.add('selected');
+}
+function editHandlePhoto(id, input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    editState[id] = { pendingPhoto: ev.target.result };
+    const preview = document.getElementById(`edit-photo-preview-${id}`);
+    const btns    = document.getElementById(`edit-photo-btns-${id}`);
+    if (preview) { preview.querySelector('img').src = ev.target.result; }
+    else {
+      document.getElementById(`edit-photo-section-${id}`).insertAdjacentHTML('afterbegin',
+        `<div class="edit-photo-preview" id="edit-photo-preview-${id}">
+           <img src="${ev.target.result}" alt="Photo">
+           <button class="photo-remove" onclick="editRemovePhoto('${id}')">✕</button>
+         </div>`);
+    }
+    if (btns) btns.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function editRemovePhoto(id) {
+  editState[id] = { pendingPhoto: 'remove' };
+  const preview = document.getElementById(`edit-photo-preview-${id}`);
+  if (preview) preview.remove();
+  const btns = document.getElementById(`edit-photo-btns-${id}`);
+  if (btns) btns.style.display = 'grid';
+}
+
+async function saveEdit(id) {
+  const entries = getEntries();
+  const idx = entries.findIndex(x => x.id === id);
+  if (idx === -1) return;
+
+  const bristolSelected = document.querySelector(`#card-${id} .edit-bristol-item.selected`);
+  const colorSelected   = document.querySelector(`#card-${id} .edit-color-swatch.selected`);
+  const date  = document.getElementById(`edit-date-${id}`)?.value;
+  const time  = document.getElementById(`edit-time-${id}`)?.value;
+  const notes = document.getElementById(`edit-notes-${id}`)?.value.trim();
+
+  if (!date || !time) { showToast('⚠️ Date and time required'); return; }
+  if (!bristolSelected) { showToast('⚠️ Select a Bristol type'); return; }
+  if (!colorSelected)   { showToast('⚠️ Select a color'); return; }
+
+  const bristolType = parseInt(bristolSelected.id.split('-').pop());
+  const colorId     = colorSelected.id.split('-').pop();
+
+  // Handle photo changes
+  const pending = editState[id]?.pendingPhoto;
+  if (pending === 'remove') {
+    await deletePhoto(id);
+    entries[idx].hasPhoto = false;
+  } else if (pending && pending !== 'remove') {
+    await savePhoto(id, pending);
+    entries[idx].hasPhoto = true;
+  }
+
+  entries[idx] = { ...entries[idx], date, time, bristol: bristolType, color: colorId, notes };
+  // Re-sort after possible date change
+  entries.sort((a,b) => new Date(b.date+'T'+b.time) - new Date(a.date+'T'+a.time));
+  saveEntries(entries);
+  delete editState[id];
+
+  showToast('✅ Entry updated');
+  renderLog();
+  updateStats();
+}
+
+function cancelEdit(id) {
+  const card = document.getElementById('card-'+id);
+  if (!card) return;
+  card.querySelector('.edit-form')?.remove();
+  card.style.borderColor = '';
+  delete editState[id];
 }
 
 // ── RENDER LOG ────────────────────────────────────────────────────────────
@@ -1179,7 +1365,7 @@ async function generateReport() {
   const entryRows = [...sorted].reverse().map(e => {
     const colorObj=COLORS.find(c=>c.id===e.color)||{hex:'#888',label:e.color};
     const bristolObj=BRISTOL.find(b=>b.type===e.bristol)||{face:'💩',desc:''};
-    const photoHtml=e.photo?`<div style="margin-top:8px;"><img src="${e.photo}" style="max-width:220px;max-height:160px;border-radius:8px;object-fit:cover;border:1px solid #E8D5C0;" alt="Photo"></div>`:'';
+    const photoHtml=e.photo?`<div style="margin-top:10px;"><img src="${e.photo}" style="max-width:340px;width:100%;border-radius:8px;object-fit:contain;border:1px solid #E8D5C0;display:block;" alt="Photo"></div>`:'';
     return `<div style="padding:14px 0;border-bottom:1px solid #EDD5BC;page-break-inside:avoid;">
       <div style="display:flex;align-items:flex-start;gap:10px;">
         <span style="font-size:22px;">${bristolObj.face}</span>
