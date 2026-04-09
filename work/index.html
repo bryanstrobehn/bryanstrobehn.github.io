@@ -8,31 +8,14 @@
   <link rel="stylesheet" href="../style.css" />
   <style>
     .work-filters {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 0.5rem;
       margin-bottom: 2rem;
-      flex-wrap: wrap;
-      align-items: center;
     }
-    .filter-btn {
-      background: none;
-      border: 2px solid var(--border);
-      border-radius: 0;
-      padding: 0.4rem 1rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-family: var(--font-body);
-      transition: border-color 0.15s, color 0.15s;
-    }
-    .filter-btn:hover { border-color: var(--navy); color: var(--navy); }
-    .filter-btn.active { background: var(--navy); border-color: var(--navy); color: var(--cream); }
 
+    .filter-select,
     .sort-select {
-      margin-left: auto;
       background: none;
       border: 2px solid var(--border);
       border-radius: 0;
@@ -44,6 +27,7 @@
       color: var(--text-muted);
       cursor: pointer;
       font-family: var(--font-body);
+      width: 100%;
     }
 
     .tile-grid {
@@ -137,6 +121,10 @@
     }
     .show-more-btn:hover { background: var(--navy); color: var(--cream); }
     .show-more-wrap.hidden { display: none; }
+
+    @media (max-width: 640px) {
+      .tile-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -149,6 +137,7 @@
     <li><a href="../projects/index.html">Personal Projects</a></li>
     <li><a href="../resume.html">Resume</a></li>
   </ul>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Menu"><svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor"><rect width="18" height="2" rx="1"/><rect y="6" width="18" height="2" rx="1"/><rect y="12" width="18" height="2" rx="1"/></svg></button>
 </nav>
 
 <main>
@@ -162,9 +151,11 @@
   </div>
 
   <div class="work-filters">
-    <button class="filter-btn active" data-filter="all">All</button>
-    <button class="filter-btn" data-filter="work">Work</button>
-    <button class="filter-btn" data-filter="personal">Personal</button>
+    <select class="filter-select" id="filter-select">
+      <option value="all">Filter: All</option>
+      <option value="work">Filter: Work</option>
+      <option value="personal">Filter: Personal</option>
+    </select>
     <select class="sort-select" id="sort-select">
       <option value="default">Sort: Default</option>
       <option value="recent">Sort: Recent</option>
@@ -312,7 +303,7 @@
   const grid = document.getElementById('tile-grid');
   const showMoreWrap = document.getElementById('show-more-wrap');
   const showMoreBtn = document.getElementById('show-more-btn');
-  const filterBtns = document.querySelectorAll('.filter-btn');
+  const filterSelect = document.getElementById('filter-select');
   const sortSelect = document.getElementById('sort-select');
 
   let currentFilter = 'all';
@@ -362,13 +353,9 @@
     showMoreBtn.textContent = 'Show More';
   }
 
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentFilter = btn.dataset.filter;
-      applyFilterAndSort();
-    });
+  filterSelect.addEventListener('change', () => {
+    currentFilter = filterSelect.value;
+    applyFilterAndSort();
   });
 
   sortSelect.addEventListener('change', applyFilterAndSort);
@@ -383,6 +370,9 @@
   });
 
   applyFilterAndSort();
+
+  // Nav toggle
+  (function(){var n=document.querySelector('nav'),t=document.getElementById('nav-toggle');t.addEventListener('click',function(){n.classList.toggle('nav-open');});document.addEventListener('click',function(e){if(!e.target.closest('nav'))n.classList.remove('nav-open');});})();
 </script>
 </body>
 </html>

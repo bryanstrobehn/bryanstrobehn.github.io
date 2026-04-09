@@ -26,28 +26,19 @@
       --font-body:    'Barlow', sans-serif;
     }
 
-    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 19px; -webkit-font-smoothing: antialiased; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 19px; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 
     /* ── Shell ── */
-    .shell { display: grid; grid-template-columns: 275px 1fr; grid-template-rows: 65px 1fr 33px; height: 100vh; overflow: hidden; }
+    .shell { display: grid; grid-template-columns: 1fr; grid-template-rows: 65px 1fr 33px; height: 100vh; overflow: hidden; }
 
     /* ── Topbar ── */
     .topbar { grid-column: 1 / -1; background: #0a0c10; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 2rem; gap: 1.25rem; }
     .topbar-logo { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
     .topbar-logo span { color: rgba(255,255,255,0.25); font-weight: 400; }
-    .topbar-sub { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); border-left: 1px solid var(--border); padding-left: 1.25rem; }
     .topbar-nav { margin-left: auto; display: flex; align-items: center; gap: 1.5rem; }
     .topbar-nav a { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.45); text-decoration: none; transition: color 0.15s; }
     .topbar-nav a:hover { color: rgba(255,255,255,0.85); }
     .topbar-nav a.active { color: var(--accent); border-bottom: 1px solid var(--accent); padding-bottom: 1px; }
-
-    /* ── Sidebar ── */
-    .sidebar { background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; padding: 1.5rem 0; }
-    .sidebar-label { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); padding: 0 1.5rem; margin-bottom: 0.4rem; margin-top: 1.5rem; }
-    .sidebar-label:first-child { margin-top: 0; }
-    .sidebar-item { display: flex; align-items: center; gap: 0.7rem; padding: 0.65rem 1.5rem; font-size: 0.9rem; color: var(--text-dim); cursor: pointer; transition: background 0.1s, color 0.1s; border-left: 2px solid transparent; text-decoration: none; }
-    .sidebar-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
-    .sidebar-item.active { background: rgba(212,114,42,0.1); color: var(--accent); border-left-color: var(--accent); }
 
     /* ── Content ── */
     .content { overflow-y: auto; padding: 2.5rem 3.5rem 4rem; background: radial-gradient(ellipse 60% 40% at 80% 0%, rgba(212,114,42,0.04) 0%, transparent 70%), var(--bg); }
@@ -124,6 +115,56 @@
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #1e2330; border-radius: 2px; }
+
+    /* ── Launcher nav hamburger ── */
+    #launcher-nav-toggle {
+      display: none;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 0.3rem 0.45rem;
+      margin-left: auto;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    #launcher-nav-toggle:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+    @media (max-width: 768px) {
+      #launcher-nav-toggle { display: flex; }
+
+      /* Dropdown: position fixed so shell overflow:hidden doesn't clip it */
+      .topbar-nav {
+        display: none;
+        position: fixed;
+        top: 65px;
+        right: 0;
+        background: #0a0c10;
+        border: 1px solid var(--border);
+        border-top: none;
+        flex-direction: column;
+        padding: 0.75rem 1.5rem 1rem;
+        gap: 0.75rem;
+        min-width: 160px;
+        z-index: 200;
+      }
+      .topbar-nav.open { display: flex; }
+      .topbar-nav a { font-size: 0.85rem; }
+
+      .content { padding: 1.5rem 1.25rem 3rem; overflow-x: hidden; }
+      /* min-width:0 prevents grid blowout on narrow screens */
+      .tile-grid { grid-template-columns: 1fr; min-width: 0; }
+      .tile { min-width: 0; }
+      .content-header { flex-direction: column; align-items: stretch; }
+      .content-header-left { width: 100%; min-width: 0; }
+      .filter-row { width: 100%; }
+      .content-title { font-size: 1.5rem; }
+      .content-disclaimer { font-size: 0.72rem; max-width: 100%; overflow-wrap: break-word; }
+      .statusbar { padding: 0 1.25rem; gap: 0.75rem; flex-wrap: wrap; }
+    }
   </style>
 </head>
 <body>
@@ -132,24 +173,11 @@
   <!-- Topbar -->
   <div class="topbar">
     <div class="topbar-logo">BS<span>/</span>LAUNCHER</div>
-    <nav class="topbar-nav">
-      <a href="../index.html">Portfolio Home</a>
-      <a href="#" class="active"> Projects</a>
+    <nav class="topbar-nav" id="launcher-topbar-nav">
+      <a href="../index.html">Portfolio</a>
+      <a href="#" class="active">Projects</a>
     </nav>
-  </div>
-
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <div class="sidebar-label">Category</div>
-    <a class="sidebar-item active" data-filter="all" href="#">
-      🗂️ All Projects
-    </a>
-    <div id="sidebar-filters"></div>
-
-    <div class="sidebar-label">Quick Links</div>
-    <a class="sidebar-item" href="https://claude.ai" target="_blank">✨ Claude.ai</a>
-    <a class="sidebar-item" href="https://github.com/bryanstrobehn" target="_blank">🐙 GitHub</a>
-    <a class="sidebar-item" href="../index.html">🏠 Portfolio Site</a>
+    <button id="launcher-nav-toggle" aria-label="Menu"><svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor"><rect width="18" height="2" rx="1"/><rect y="6" width="18" height="2" rx="1"/><rect y="12" width="18" height="2" rx="1"/></svg></button>
   </div>
 
   <!-- Main content -->
@@ -351,23 +379,14 @@
   allTiles.forEach(t => { if (t.dataset.filter) seenFilters.add(t.dataset.filter); });
 
   const filterRow = document.getElementById('filter-row');
-  const sidebarFilters = document.getElementById('sidebar-filters');
 
   seenFilters.forEach(key => {
     const meta = FILTER_META[key] || { label: key, icon: '🔹' };
-
     const btn = document.createElement('button');
     btn.className = 'filter-btn';
     btn.dataset.filter = key;
     btn.textContent = meta.label;
     filterRow.appendChild(btn);
-
-    const link = document.createElement('a');
-    link.className = 'sidebar-item';
-    link.dataset.filter = key;
-    link.href = '#';
-    link.textContent = `${meta.icon} ${meta.label}`;
-    sidebarFilters.appendChild(link);
   });
 
   function applyFilter(filter) {
@@ -378,7 +397,6 @@
 
   function setFilter(filter) {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
-    document.querySelectorAll('.sidebar-item[data-filter]').forEach(s => s.classList.toggle('active', s.dataset.filter === filter));
     applyFilter(filter);
   }
 
@@ -387,13 +405,12 @@
     if (btn) setFilter(btn.dataset.filter);
   });
 
-  sidebarFilters.addEventListener('click', e => {
-    const item = e.target.closest('.sidebar-item[data-filter]');
-    if (item) { e.preventDefault(); setFilter(item.dataset.filter); }
-  });
-
-  document.querySelector('.sidebar-item[data-filter="all"]').addEventListener('click', e => {
-    e.preventDefault(); setFilter('all');
+  // Launcher nav hamburger
+  const launcherToggle = document.getElementById('launcher-nav-toggle');
+  const launcherNav = document.getElementById('launcher-topbar-nav');
+  launcherToggle.addEventListener('click', () => launcherNav.classList.toggle('open'));
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.topbar')) launcherNav.classList.remove('open');
   });
 </script>
 </body>

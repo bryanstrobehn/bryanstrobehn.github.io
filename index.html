@@ -17,6 +17,7 @@
     <li><a href="projects/index.html">Personal Projects</a></li>
     <li><a href="resume.html">Resume</a></li>
   </ul>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Menu"><svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor"><rect width="18" height="2" rx="1"/><rect y="6" width="18" height="2" rx="1"/><rect y="12" width="18" height="2" rx="1"/></svg></button>
 </nav>
 
 <main>
@@ -25,7 +26,7 @@
   <div class="hero section">
     <div>
       <p class="hero-eyebrow">Product Manager</p>
-      <h1>Bryan Strobehn</h1>
+      <h1>Hey there! 👋 </h1>
       <p class="hero-location">📍 Cincinnati, OH</p>
       <p style="margin-top:1.5rem; font-size:1.05rem; max-width:540px;">
         I'm a product manager with 10 years of experience across VR, travel tech, and manufacturing software. I'm drawn to the messy middle where user needs, business constraints, and technical reality collide. I turn ambiguity into priorities and priorities into shipped product.
@@ -62,6 +63,6 @@
 <footer>
   &copy; <span id="yr"></span> Bryan Strobehn &nbsp;·&nbsp; Cincinnati, OH
 </footer>
-<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+<script>document.getElementById('yr').textContent=new Date().getFullYear();(function(){var n=document.querySelector('nav'),t=document.getElementById('nav-toggle');t.addEventListener('click',function(){n.classList.toggle('nav-open');});document.addEventListener('click',function(e){if(!e.target.closest('nav'))n.classList.remove('nav-open');});})();</script>
 </body>
 </html>
