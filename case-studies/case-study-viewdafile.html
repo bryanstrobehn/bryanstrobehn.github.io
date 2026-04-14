@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ViewDaFile — Bryan Strobehn</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="logo">Bryan Strobehn</a>
+  <ul>
+    <li><a href="../index.html">About</a></li>
+    <li><a href="../work/index.html" class="active">Case Studies</a></li>
+    <li><a href="../projects/index.html">Personal Projects</a></li>
+    <li><a href="../resume.html">Resume</a></li>
+  </ul>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Menu"><svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor"><rect width="18" height="2" rx="1"/><rect y="6" width="18" height="2" rx="1"/><rect y="12" width="18" height="2" rx="1"/></svg></button>
+</nav>
+
+<main>
+
+  <div class="section">
+    <p style="margin-bottom:0.5rem;">
+      <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+    </p>
+    <h3>Personal Project · 2026</h3>
+    <h1>ViewDaFile: A Minimal PDF Viewer for Windows</h1>
+    <p style="font-size:1.05rem; max-width:600px; color:#374151;">
+      Every PDF reader I owned wanted to be something more. ViewDaFile is a native Windows app that does exactly one thing — opens PDFs — and stays out of the way while it does it.
+    </p>
+  </div>
+
+  <div class="cs-meta">
+    <div class="cs-meta-item">
+      <span class="label">Type</span>
+      <span class="value">Personal Project</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Stack</span>
+      <span class="value">Tauri, Rust, Vanilla JS</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Platform</span>
+      <span class="value">Windows (native EXE)</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Status</span>
+      <span class="value">Working prototype is live</span>
+    </div>
+  </div>
+
+  <div class="cs-cta">
+    <span class="cs-cta-label">Native Windows App</span>
+    <a href="https://github.com/bryanstrobehn/pdf-viewer/releases/latest" class="cs-cta-btn" target="_blank" rel="noopener">Download ViewDaFile →</a>
+  </div>
+
+  <div class="cs-section">
+    <h2>Why I Built It</h2>
+    <p>Adobe Acrobat is the canonical answer, but it's also a subscription, an update prompt, and a toolbar full of things I never use. Alternatives in the same weight class have similar problems: they're either feature-stuffed or they wrap a browser engine and feel like it. I wanted something that opened fast, scrolled smoothly, and looked like it belonged on a dark desktop — not like a web page with a title bar bolted on.</p>
+    <p>The other half of this was a learning opportunity for me. I wanted to build a native Windows exe. I'd been shipping browser-based tools (BPM Finder, Grab, Convert Stuff) and wanted to understand what the Tauri stack felt like for a real use case. A PDF viewer is small enough to be tractable but real enough to matter — it has to handle rendering, user input, file system access, and persistence. All the pieces that test whether a framework is actually usable.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>Key Features</h2>
+    <p>TBH, nothing unexpected here. It's just a lightweight PDF viewer.</p>
+    <p><strong>Continuous scroll</strong> is the default reading mode. Pages flow top to bottom without clicking between them, which is how I actually read documents. Individual page mode is available when you need it.</p>
+    <p><strong>Text selection</strong> works the way you'd expect — click and drag to select, copy with Ctrl+C. No mode switching, no toolbar toggling.</p>
+    <p><strong>Clickable links</strong> open in the system default browser. Internal document links jump to the right page. Neither required any user configuration.</p>
+    <p><strong>Zoom</strong> is handled via Ctrl+Scroll or the keyboard shortcuts you'd use anywhere else. The viewport stays centered on whatever you're looking at rather than snapping to the page edge.</p>
+    <p><strong>Recent files</strong> are persisted locally so reopening a document is one click. No account, no cloud sync, no setting up a library. The list lives on your machine.</p>
+  </div>
+
+       <img src="../assets/vdf-image.png" alt="" class="cs-header-img" id="cs-header-img">
+
+  <div class="cs-section">
+    <h2>What Tauri Was Like</h2>
+    <p>Tauri's pitch is a native shell around a web renderer, with Rust handling the system layer. For a PDF viewer that meant: PDF.js does the rendering in the webview, Rust handles file system access and IPC, and the OS provides the window chrome. The output is a single installable EXE under 10MB — dramatically smaller than an Electron equivalent.</p>
+    <p>The friction was mostly in the Rust learning curve for the IPC layer, not in Tauri itself. Once the file-open dialog and recent-files persistence were wired up, the rest was vanilla JS against a PDF.js canvas. The dark theme is CSS. The whole renderer is a web page that happens to have file system access and a real title bar.</p>
+    <p>The result feels native because it uses native OS controls where it matters — window management, system dialogs, keyboard shortcuts — and otherwise stays out of the way.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>What's Not In It</h2>
+    <p>No annotation tools. No form filling. No sidebar panels. No bookmarks UI beyond recent files. None of these are planned for v1. The goal was a PDF viewer that opened immediately, rendered correctly, and didn't require a tutorial. Feature scope is a product decision — the discipline here was resisting the pull toward "while I'm at it" additions that would have made it heavier without making it better for the use case it actually covers.</p>
+  </div>
+
+    <div class="cs-cta">
+    <a href="https://github.com/bryanstrobehn/pdf-viewer/releases/latest" class="cs-cta-btn" target="_blank" rel="noopener">Download ViewDaFile →</a>
+  </div>
+
+  <div style="margin-top:3rem;">
+    <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+  </div>
+
+</main>
+
+<footer>
+  &copy; <span id="yr"></span> Bryan Strobehn &nbsp;·&nbsp; Cincinnati, OH
+</footer>
+<script>document.getElementById('yr').textContent=new Date().getFullYear();(function(){var n=document.querySelector('nav'),t=document.getElementById('nav-toggle');t.addEventListener('click',function(){n.classList.toggle('nav-open');});document.addEventListener('click',function(e){if(!e.target.closest('nav'))n.classList.remove('nav-open');});})();</script>
+</body>
+</html>

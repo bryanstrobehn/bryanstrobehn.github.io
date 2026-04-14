@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brew Log — Bryan Strobehn</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="logo">Bryan Strobehn</a>
+  <ul>
+    <li><a href="../index.html">About</a></li>
+    <li><a href="../work/index.html" class="active">Case Studies</a></li>
+    <li><a href="../projects/index.html">Personal Projects</a></li>
+    <li><a href="../resume.html">Resume</a></li>
+  </ul>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Menu"><svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor"><rect width="18" height="2" rx="1"/><rect y="6" width="18" height="2" rx="1"/><rect y="12" width="18" height="2" rx="1"/></svg></button>
+</nav>
+
+<main>
+
+  <div class="section">
+    <p style="margin-bottom:0.5rem;">
+      <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+    </p>
+    <h3>Personal Project · 2026</h3>
+    <h1>Brew Log: A Homebrewing Batch Tracker</h1>
+    <p style="font-size:1.05rem; max-width:600px; color:#374151;">
+      I homebrew mead. I wanted a more focused tracker than Google Docs, but didn't want to pay for it. So I built one.
+    </p>
+  </div>
+
+  <div class="cs-meta">
+    <div class="cs-meta-item">
+      <span class="label">Type</span>
+      <span class="value">Personal Project</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Stack</span>
+      <span class="value">Vanilla JS (ES modules), localStorage, IndexedDB</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Status</span>
+      <span class="value">Live</span>
+    </div>
+  </div>
+
+  <div class="cs-cta">
+    <span class="cs-cta-label">LIVE PROJECT</span>
+    <a href="https://bryanstrobehn.github.io/brewlog" class="cs-cta-btn" target="_blank" rel="noopener noreferrer">Open Brew Log →</a>
+    <a href="https://github.com/bryanstrobehn/brewlog" style="display:inline-block; margin-top:0.75rem; font-size:0.8rem; color:var(--text-muted); text-decoration:none;" target="_blank" rel="noopener noreferrer">View source on GitHub →</a>
+  </div>
+
+  <div class="cs-section">
+    <h2>How It Started</h2>
+    <p>I homebrew mead. For a while I tracked batches in Gdocs, which... worked... but quickly grew out of control and sloppy as my notes merged in with the instructions.</p>
+    <p>This didn't start as a product idea. I wasn't trying to build something for other brewers. I just wanted a tool that fit the actual workflow of making a batch — recipe first, then tracking, then notes — without forcing me to switch between different files or apps.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>What I Built</h2>
+    <p>Each batch gets a card with a photo thumbnail, a recipe editor with an ingredients list and step-by-step instructions (markdown supported), and a gravity log that estimates ABV as you add readings. Tasting notes have attribute tags so you can characterize a batch in a consistent way across batches without free-form text getting hard to compare.</p>
+    <p>Brew mode turns the recipe steps into a sequential checklist. When you work through the last step, the batch auto-marks as "It's done!" — small thing, but satisfying in practice.</p>
+    <p>The architecture is localStorage for structured metadata and IndexedDB for photos, keeping everything on-device. There's no backend and no account. A full JSON export/import lets you back up or move data. Recipes can also be shared as a URL with the recipe encoded as a base64 hash — no server needed, just a link.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>A Few Design Decisions</h2>
+    <p>The most interesting one was the save model. I started with autosave, which seemed like the obvious choice — every change commits automatically, nothing gets lost. But autosave was giving me headaches (fire too often and it was losing focus on the text field, for example). Better to keep it simple, so I went with a manual save + notifier if you close the app with unsaved changes.</p>
+    <p>The other notable moment was using IndexedDB for the first time. localStorage's 5MB cap makes it the wrong choice for images — something I'd been aware of in the abstract. IndexedDB's API is verbose and async in a way that took some getting used to, but once I understood the pattern the split worked cleanly. Structured data in one place, blobs in another, both local, both fast.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>What I'd Do Differently</h2>
+    <p>The shareable recipe links were added late, as a nice-to-have. They work, but they're bolted on rather than designed in — the URL is longer than it needs to be because the entire recipe object gets encoded rather than a leaner representation. If I'd thought about sharing earlier I'd have built a minimal data model for it from the start. Not a real problem in practice, but a clear sign of where the architecture was added versus planned.</p>
+    <p>I'd also think harder upfront about which features actually need to sync across devices and which don't. The export/import flow is fine for backups, but there are moments — like wanting to reference a recipe from my phone while the batch is running — where a simple read-only URL per batch would have been more useful than a full JSON export.</p>
+    <p>All said, it gets the job done and looks decent. Go ahead and try it -- just remember that the data is stored locally, so make sure to save, import, and export accordingly.</p>
+  </div>
+
+  <div class="cs-cta">
+    <a href="https://bryanstrobehn.github.io/brewlog" class="cs-cta-btn" target="_blank" rel="noopener noreferrer">Open Brew Log →</a>
+    <a href="https://github.com/bryanstrobehn/brewlog" style="display:inline-block; margin-top:0.75rem; font-size:0.8rem; color:var(--text-muted); text-decoration:none;" target="_blank" rel="noopener noreferrer">View source on GitHub →</a>
+  </div>
+
+  <div style="margin-top:3rem;">
+    <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+  </div>
+
+</main>
+
+<footer>
+  &copy; <span id="yr"></span> Bryan Strobehn &nbsp;·&nbsp; Cincinnati, OH
+</footer>
+<script>document.getElementById('yr').textContent=new Date().getFullYear();(function(){var n=document.querySelector('nav'),t=document.getElementById('nav-toggle');t.addEventListener('click',function(){n.classList.toggle('nav-open');});document.addEventListener('click',function(e){if(!e.target.closest('nav'))n.classList.remove('nav-open');});})();</script>
+</body>
+</html>
