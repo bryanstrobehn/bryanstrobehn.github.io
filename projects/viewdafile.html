@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ViewDaFile — PDF Viewer · Bryan Strobehn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:    #0d0f14;
+      --bg2:   #13161d;
+      --bg3:   #1c2030;
+      --border: rgba(255,255,255,0.08);
+      --accent: #d4722a;
+      --text:       #c8d0e0;
+      --text-muted: #7a8499;
+      --text-dim:   #a0aabb;
+      --green: #00e676;
+      --font-display: 'Barlow Condensed', sans-serif;
+      --font-body:    'Barlow', sans-serif;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 19px; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+
+    /* ── Shell ── */
+    .shell { display: grid; grid-template-columns: 1fr; grid-template-rows: 65px 1fr 33px; height: 100vh; overflow: hidden; }
+
+    /* ── Topbar ── */
+    .topbar { grid-column: 1 / -1; background: #0a0c10; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 2rem; gap: 1.25rem; }
+    .topbar-logo { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+    .topbar-logo span { color: rgba(255,255,255,0.25); font-weight: 400; }
+    .topbar-nav { margin-left: auto; display: flex; align-items: center; gap: 1.5rem; }
+    .topbar-nav a { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.45); text-decoration: none; transition: color 0.15s; }
+    .topbar-nav a:hover { color: rgba(255,255,255,0.85); }
+    .topbar-nav a.active { color: var(--accent); border-bottom: 1px solid var(--accent); padding-bottom: 1px; }
+
+    /* ── Content ── */
+    .content { overflow-y: auto; padding: 2.5rem 3rem 4rem; background: radial-gradient(ellipse 60% 40% at 80% 0%, rgba(212,114,42,0.04) 0%, transparent 70%), var(--bg); }
+    .inner { max-width: 1080px; }
+
+    /* ── Two-column layout (desktop) ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas:
+        "header  aside"
+        "feats   aside"
+        "reqs    aside"
+        "footer  aside";
+      column-gap: 2.5rem;
+      align-items: start;
+    }
+    .layout-header   { grid-area: header; padding-bottom: 2rem; }
+    .layout-features { grid-area: feats;  padding-bottom: 2rem; }
+    .layout-reqs     { grid-area: reqs;   padding-bottom: 2rem; }
+    .layout-footer   { grid-area: footer; }
+    .layout-aside    {
+      grid-area: aside;
+      align-self: stretch;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── App header ── */
+    .app-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1.25rem; }
+    .app-header-left { display: flex; align-items: center; gap: 1rem; }
+    .app-icon { font-size: 2.5rem; line-height: 1; }
+    .app-name { font-family: var(--font-display); font-size: 2rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #fff; line-height: 1; }
+    .app-tagline { font-size: 0.88rem; color: var(--text-muted); margin-top: 0.35rem; }
+
+    /* ── Download button ── */
+    .dl-btn { background: var(--accent); color: #fff; text-decoration: none; padding: 0.75rem 1.75rem; font-family: var(--font-display); font-size: 1rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border-radius: 4px; transition: background 0.15s; flex-shrink: 0; white-space: nowrap; }
+    .dl-btn:hover { background: #be641f; }
+
+    /* ── Screenshot (inside aside) ── */
+    .layout-aside img { width: 100%; display: block; flex: 1; object-fit: cover; object-position: top center; min-height: 0; }
+
+    /* ── Features ── */
+    .section-label { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .section-sub { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1.25rem; line-height: 1.5; }
+
+    .feature-list { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem 2rem; }
+    .feature-list li { display: flex; align-items: center; gap: 0.6rem; font-family: var(--font-display); font-size: 0.9rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #e8ecf4; }
+    .feature-list li::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+    /* ── Requirements ── */
+    .requirements { font-size: 0.75rem; color: var(--text-muted); padding: 0.9rem 1.2rem; background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; line-height: 1.7; }
+    .requirements strong { color: var(--text-dim); font-weight: 500; }
+
+    /* ── Page footer ── */
+    .page-footer a { font-size: 0.78rem; color: var(--text-muted); text-decoration: none; letter-spacing: 0.04em; transition: color 0.15s; }
+    .page-footer a:hover { color: var(--accent); }
+
+    /* ── Statusbar ── */
+    .statusbar { grid-column: 1 / -1; background: #080a0d; border-top: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; gap: 1.75rem; font-size: 0.7rem; letter-spacing: 0.06em; color: var(--text-muted); }
+    .statusbar-pip { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 5px var(--green); }
+    .statusbar a { color: inherit; text-decoration: none; }
+    .statusbar a:hover { color: var(--accent); }
+
+    /* ── Mobile hamburger ── */
+    #launcher-nav-toggle { display: none; background: none; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; color: var(--text-muted); padding: 0.3rem 0.45rem; margin-left: auto; align-items: center; justify-content: center; flex-shrink: 0; transition: color 0.15s, border-color 0.15s; }
+    #launcher-nav-toggle:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+    /* ── Tablet / mobile ── */
+    @media (max-width: 900px) {
+      .layout {
+        display: flex;
+        flex-direction: column;
+      }
+      .layout-header   { order: 1; padding-bottom: 2rem; }
+      .layout-features { order: 2; padding-bottom: 0; }
+      .layout-aside    { order: 3; margin: 1.75rem 0; align-self: auto; }
+      .layout-reqs     { order: 4; padding-bottom: 1.75rem; }
+      .layout-footer   { order: 5; }
+    }
+
+    @media (max-width: 768px) {
+      #launcher-nav-toggle { display: flex; }
+      .topbar-nav { display: none; position: fixed; top: 65px; right: 0; background: #0a0c10; border: 1px solid var(--border); border-top: none; flex-direction: column; padding: 0.75rem 1.5rem 1rem; gap: 0.75rem; min-width: 160px; z-index: 200; }
+      .topbar-nav.open { display: flex; }
+      .topbar-nav a { font-size: 0.85rem; }
+      .content { padding: 1.5rem 1.25rem 3rem; }
+      .app-header { flex-direction: column; align-items: flex-start; }
+      .feature-list { grid-template-columns: 1fr; }
+      .statusbar { padding: 0 1.25rem; gap: 0.75rem; flex-wrap: wrap; }
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #1e2330; border-radius: 2px; }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-logo">BS<span>/</span>LAUNCHER</div>
+    <nav class="topbar-nav" id="launcher-topbar-nav">
+      <a href="../index.html">Portfolio</a>
+      <a href="index.html">Projects</a>
+      <a href="#" class="active">ViewDaFile</a>
+    </nav>
+    <button id="launcher-nav-toggle" aria-label="Menu"><svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor"><rect width="18" height="2" rx="1"/><rect y="6" width="18" height="2" rx="1"/><rect y="12" width="18" height="2" rx="1"/></svg></button>
+  </div>
+
+  <!-- Main content -->
+  <div class="content">
+    <div class="inner">
+      <div class="layout">
+
+        <!-- Left: header -->
+        <div class="layout-header">
+          <div class="app-header">
+            <div class="app-header-left">
+              <div class="app-icon">📄</div>
+              <div>
+                <div class="app-name">ViewDaFile — PDF Viewer</div>
+                <div class="app-tagline">Windows native &nbsp;·&nbsp; Dark mode &nbsp;·&nbsp; Free</div>
+              </div>
+            </div>
+            <a href="https://github.com/bryanstrobehn/pdf-viewer/releases/latest" class="dl-btn" target="_blank" rel="noopener">Download for Windows →</a>
+          </div>
+        </div>
+
+        <!-- Left: features -->
+        <div class="layout-features">
+          <div class="section-label">What it does</div>
+          <div class="section-sub">Lightweight PDF viewer. No unnecessary stuff. Does enough.</div>
+          <ul class="feature-list">
+            <li>Opens PDFs natively</li>
+            <li>Text selection and copy</li>
+            <li>Hyperlinks supported</li>
+            <li>Zoom controls</li>
+            <li>Recent files</li>
+            <li>Dark mode</li>
+            <li>No account needed</li>
+            <li>Fully offline, no data sent</li>
+          </ul>
+        </div>
+
+        <!-- Left: requirements -->
+        <div class="layout-reqs">
+          <div class="requirements">
+            <strong>System requirements:</strong> &nbsp;Windows 10 or later &nbsp;·&nbsp; No installation required — runs as a portable EXE &nbsp;·&nbsp; ~10MB download &nbsp;·&nbsp; Built with Tauri + Rust + PDF.js
+          </div>
+        </div>
+
+        <!-- Left: footer -->
+        <div class="layout-footer">
+          <div class="page-footer">
+            <a href="index.html">← Back to Projects</a>
+          </div>
+        </div>
+
+        <!-- Right: screenshot -->
+        <div class="layout-aside">
+          <img src="../assets/vdf-image.png" alt="ViewDaFile PDF viewer running on Windows">
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Statusbar -->
+  <div class="statusbar">
+    <div class="statusbar-pip"></div>
+    <span>ViewDaFile</span>
+    <span>·</span>
+    <span>Windows Native · Free</span>
+    <span>·</span>
+    <a href="https://github.com/bryanstrobehn/pdf-viewer" target="_blank" rel="noopener">github.com/bryanstrobehn/pdf-viewer</a>
+  </div>
+
+</div><!-- /shell -->
+
+<script>
+  const launcherToggle = document.getElementById('launcher-nav-toggle');
+  const launcherNav    = document.getElementById('launcher-topbar-nav');
+  launcherToggle.addEventListener('click', () => launcherNav.classList.toggle('open'));
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.topbar')) launcherNav.classList.remove('open');
+  });
+</script>
+</body>
+</html>
