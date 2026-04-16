@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Syncer — Bryan Strobehn</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="logo">Bryan Strobehn</a>
+  <ul>
+    <li><a href="../index.html">About</a></li>
+    <li><a href="../work/index.html" class="active">Case Studies</a></li>
+    <li><a href="../projects/index.html">Personal Projects</a></li>
+    <li><a href="../resume.html">Resume</a></li>
+  </ul>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Menu"><svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor"><rect width="18" height="2" rx="1"/><rect y="6" width="18" height="2" rx="1"/><rect y="12" width="18" height="2" rx="1"/></svg></button>
+</nav>
+
+<main>
+
+  <div class="section">
+    <p style="margin-bottom:0.5rem;">
+      <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+    </p>
+    <h3>Personal Project · 2026</h3>
+    <h1>Syncer: A Lightweight Personal Sync Backend</h1>
+    <p style="font-size:1.05rem; max-width:600px; color:#374151;">
+      A rough prototype built to scratch a specific itch: syncing local-first apps across my own devices without handing data to a third-party service or spinning up infrastructure I'd have to maintain.
+    </p>
+  </div>
+
+  <div class="cs-meta">
+    <div class="cs-meta-item">
+      <span class="label">Type</span>
+      <span class="value">Personal Project (rough prototype)</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Stack</span>
+      <span class="value">Cloudflare Workers, Cloudflare KV, Vanilla JS (drop-in client module)</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Status</span>
+      <span class="value">Working prototype — personal use</span>
+    </div>
+    <div class="cs-meta-item">
+      <span class="label">Running Cost</span>
+      <span class="value">~$0/month on Cloudflare's free tier</span>
+    </div>
+  </div>
+
+  <div class="cs-section">
+    <h2>How It Started</h2>
+    <p>I'd been building local-first browser tools — <a href="case-study-brew-log.html">Brew Log</a> being the main one — and kept hitting the same wall: everything worked great on one device, then I'd want to check something from my phone and the data wasn't there. The obvious solutions (Firebase, Supabase, any SaaS sync layer) all involved handing my data to a service and adding ongoing costs or account management overhead I didn't want.</p>
+    <p>I didn't need real-time sync. I didn't need conflict resolution. I needed a simple way to push a JSON blob from one device and pull it on another. That's a solved problem — I just needed to solve it for myself, on my own terms.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>What I Built</h2>
+    <p>Syncer is a Cloudflare Worker that stores a single JSON blob per app per "vault." A vault is identified by a passphrase the user chooses once — SHA-256 hashed client-side before it ever leaves the browser, so the server stores only an opaque key and never sees the raw credential.</p>
+    <p>The client is a 40-line drop-in module — <code>sync-client.js</code> — that any vanilla JS app can adopt with two calls: <code>push(data)</code> and <code>pull()</code>. That's the entire API. Sync is manual and last-write-wins, with a timestamp guard that prevents a stale device from overwriting newer data, and an automatic local backup before any remote data is applied.</p>
+    <p>The architecture assumes each user deploys their own Worker instance ("bring your own Cloudflare"). No shared infrastructure, no shared keys, complete data ownership. At personal-use volume it runs indefinitely on Cloudflare's free tier — roughly $0/month.</p>
+    <p>Brew Log was the first consumer. It integrates via a feature flag so the sync UI is invisible to public visitors while I get the multi-device behavior I actually wanted.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>Key Decisions</h2>
+    <p><strong>Cloudflare Workers + KV over Supabase or Firebase.</strong> No cold starts, global edge distribution, and genuinely free at low volume. More importantly: no account required for the data owner. The worker is infrastructure I control and can delete — there's no vendor relationship to manage.</p>
+    <p><strong>Client-side hashing.</strong> The passphrase never leaves the browser in plaintext. The server sees only a SHA-256 hash used as a KV key. This simplifies the trust model considerably — there's nothing sensitive to protect on the server side because the server never receives anything sensitive.</p>
+    <p><strong>Manual push/pull over auto-sync.</strong> Explicit control avoids surprise overwrites. The timestamp guard prevents the most obvious foot-gun (syncing from a stale device), but the overall model is intentionally simple. For low-volume, occasional-use patterns, manual sync is the right call — it puts the user in control of when data moves.</p>
+    <p><strong>Drop-in module design.</strong> The client module is small enough to paste into any project. Adoption is two function calls. The goal was zero friction for adding sync to a new vanilla JS app — Brew Log proved the pattern works, and future projects can pick it up without rearchitecting anything.</p>
+  </div>
+
+  <div class="cs-section">
+    <h2>What It Is (and Isn't)</h2>
+    <p>This is a rough prototype built to address a personal headache. It's not a product, not a library, not a framework. The "bring your own Cloudflare" model means it's not something you can just hand to someone else and have them use in 5 minutes — there's a deploy step involved.</p>
+    <p>Last-write-wins is a deliberate simplification that works for my use case (one person, a few devices, infrequent syncs) and would be wrong for almost any multi-user scenario. The timestamp guard is a basic safeguard, not a real conflict resolution strategy.</p>
+    <p>It does exactly what I needed it to do. Whether it grows into something more general depends on whether I run into cases where the current model breaks down.</p>
+  </div>
+
+  <div style="margin-top:3rem;">
+    <a href="../work/index.html" style="color:var(--text-muted); font-size:0.875rem; text-decoration:none;">← Back to Work</a>
+  </div>
+
+</main>
+
+<footer>
+  &copy; <span id="yr"></span> Bryan Strobehn &nbsp;·&nbsp; Cincinnati, OH
+</footer>
+<script>document.getElementById('yr').textContent=new Date().getFullYear();(function(){var n=document.querySelector('nav'),t=document.getElementById('nav-toggle');t.addEventListener('click',function(){n.classList.toggle('nav-open');});document.addEventListener('click',function(e){if(!e.target.closest('nav'))n.classList.remove('nav-open');});})();</script>
+</body>
+</html>

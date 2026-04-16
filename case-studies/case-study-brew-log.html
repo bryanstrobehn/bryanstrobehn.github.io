@@ -29,7 +29,7 @@
     <h3>Personal Project · 2026</h3>
     <h1>Brew Log: A Homebrewing Batch Tracker</h1>
     <p style="font-size:1.05rem; max-width:600px; color:#374151;">
-      I homebrew mead. I wanted a more focused tracker than Google Docs, but didn't want to pay for it. So I built one.
+      I homebrew mead. I wanted a more focused tracker than Google Docs, but didn't want to pay for it. So I built one — with no framework, no dependencies, and nothing stored anywhere but your own device.
     </p>
   </div>
 
@@ -40,7 +40,7 @@
     </div>
     <div class="cs-meta-item">
       <span class="label">Stack</span>
-      <span class="value">Vanilla JS (ES modules), localStorage, IndexedDB</span>
+      <span class="value">Vanilla JS (ES modules), localStorage, IndexedDB — zero dependencies</span>
     </div>
     <div class="cs-meta-item">
       <span class="label">Status</span>
@@ -63,21 +63,24 @@
   <div class="cs-section">
     <h2>What I Built</h2>
     <p>Each batch gets a card with a photo thumbnail, a recipe editor with an ingredients list and step-by-step instructions (markdown supported), and a gravity log that estimates ABV as you add readings. Tasting notes have attribute tags so you can characterize a batch in a consistent way across batches without free-form text getting hard to compare.</p>
-    <p>Brew mode turns the recipe steps into a sequential checklist. When you work through the last step, the batch auto-marks as "It's done!" — small thing, but satisfying in practice.</p>
-    <p>The architecture is localStorage for structured metadata and IndexedDB for photos, keeping everything on-device. There's no backend and no account. A full JSON export/import lets you back up or move data. Recipes can also be shared as a URL with the recipe encoded as a base64 hash — no server needed, just a link.</p>
+    <p>Brew mode turns the recipe steps into a sequential checklist designed for use at the kettle — big tap targets, minimal chrome, usable with wet hands. When you work through the last step, the batch auto-marks as "It's done!" — small thing, but satisfying in practice.</p>
+    <p>The architecture is localStorage for structured metadata and IndexedDB for photos, keeping everything on-device. There's no backend, no account, no framework. A full JSON export/import lets you back up or move data. Recipes can also be shared as a URL with the recipe encoded entirely in the URL hash — no server needed, just a link.</p>
+    <p>Cross-device sync is available as a personal feature flag, powered by a separate tool I built called <a href="case-study-syncer.html">Syncer</a>. Public visitors get a clean, self-contained app; I get seamless multi-device sync. One codebase, two experiences.</p>
   </div>
 
   <div class="cs-section">
     <h2>A Few Design Decisions</h2>
-    <p>The most interesting one was the save model. I started with autosave, which seemed like the obvious choice — every change commits automatically, nothing gets lost. But autosave was giving me headaches (fire too often and it was losing focus on the text field, for example). Better to keep it simple, so I went with a manual save + notifier if you close the app with unsaved changes.</p>
-    <p>The other notable moment was using IndexedDB for the first time. localStorage's 5MB cap makes it the wrong choice for images — something I'd been aware of in the abstract. IndexedDB's API is verbose and async in a way that took some getting used to, but once I understood the pattern the split worked cleanly. Structured data in one place, blobs in another, both local, both fast.</p>
+    <p><strong>No framework.</strong> Intentional. The constraint of vanilla JS forces DOM fluency and keeps the app fast, portable, and free of build tooling. There's nothing to update, nothing to break. It's also a useful demonstration that "no dependencies" doesn't mean "no polish."</p>
+    <p><strong>localStorage as primary store.</strong> Working within localStorage's 5MB cap forces discipline around data shape and makes the import/export contract explicit rather than implicit. The constraint is a feature: it keeps the data model lean and the backup story simple. Photos go to IndexedDB — something I'd been aware of in the abstract, but the async API took real getting used to before the split felt clean.</p>
+    <p><strong>Manual save over autosave.</strong> I started with autosave, which seemed like the obvious choice. But it was causing focus issues on text fields — fire too often and it'd yank the cursor mid-sentence. Switched to manual save with an unsaved-changes warning on close. Simpler and less surprising.</p>
+    <p><strong>Feature-flagged sync.</strong> Adding sync via <a href="case-study-syncer.html">Syncer</a> later in the project didn't require a new codebase or a separate deploy. A single flag separates the "personal power tool" version from the "public-facing product" version. The flag keeps the public experience intentionally minimal — no auth prompts, no sync UI — while I get the feature I actually wanted.</p>
   </div>
 
   <div class="cs-section">
     <h2>What I'd Do Differently</h2>
     <p>The shareable recipe links were added late, as a nice-to-have. They work, but they're bolted on rather than designed in — the URL is longer than it needs to be because the entire recipe object gets encoded rather than a leaner representation. If I'd thought about sharing earlier I'd have built a minimal data model for it from the start. Not a real problem in practice, but a clear sign of where the architecture was added versus planned.</p>
-    <p>I'd also think harder upfront about which features actually need to sync across devices and which don't. The export/import flow is fine for backups, but there are moments — like wanting to reference a recipe from my phone while the batch is running — where a simple read-only URL per batch would have been more useful than a full JSON export.</p>
-    <p>All said, it gets the job done and looks decent. Go ahead and try it -- just remember that the data is stored locally, so make sure to save, import, and export accordingly.</p>
+    <p>Cross-device sync turned out to be the bigger missing piece — less for sharing recipes and more for just being able to pull up a batch on my phone while standing at the kettle. I did eventually address it with Syncer, but it would have been cleaner to think about sync boundaries earlier rather than retrofitting them. The feature flag makes the seam invisible to users, but it's still a seam.</p>
+    <p>All said, it gets the job done and looks decent. Go ahead and try it — just remember that the data is stored locally, so make sure to save, import, and export accordingly.</p>
   </div>
 
   <div class="cs-cta">
