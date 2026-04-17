@@ -179,6 +179,8 @@
   }
   .format-note.mp4-note { display: none; }
   .format-note.mp4-note.visible { display: block; }
+  .format-note.sys-audio-note { display: none; }
+  .format-note.sys-audio-note.visible { display: block; }
 
   .pill-group {
     display: flex; gap: 2px;
@@ -426,6 +428,7 @@ let camFacing = 'user';
 let outputFormat = 'webm'; // 'webm' | 'mp4'
 let ffmpegLoaded = false, ffmpegLoading = false;
 let recordedBlob = null;
+let recordingDuration = 0;
 
 const btn          = document.getElementById('recBtn');
 const statusEl     = document.getElementById('statusLine');
@@ -477,7 +480,8 @@ function buildTray() {
         </svg>
         sys audio
       </button>
-    </div>`;
+    </div>
+    <span class="format-note sys-audio-note" id="sysAudioNote">check 'Share system audio' in Chrome's capture dialog</span>`;
 
   const formatRow = `
     <div class="tray-row format-row">
@@ -595,6 +599,8 @@ function toggleSysAudio() {
   sysAudioEnabled = !sysAudioEnabled;
   const sb = document.getElementById('sysAudioBtn');
   if (sb) sb.classList.toggle('on', sysAudioEnabled);
+  const sn = document.getElementById('sysAudioNote');
+  if (sn) sn.classList.toggle('visible', sysAudioEnabled);
 }
 
 // ── Recording ──
@@ -681,6 +687,7 @@ function stopRecording() {
 
 async function finalise(isCamera) {
   recordedBlob = new Blob(chunks, { type: 'video/webm' });
+  recordingDuration = startTime ? (Date.now() - startTime) / 1000 : 0;
 
   btn.classList.remove('recording');
   btn.classList.add('done');
@@ -732,9 +739,11 @@ async function saveAsMp4(baseName) {
     const ff = window._ffmpeg;
     const fetchFile = window._fetchFile;
 
-    ff.setProgress(({ ratio }) => {
-      if (ratio == null || isNaN(ratio) || ratio < 0) return;
-      const pct = Math.round(Math.min(ratio, 1) * 100);
+    ff.setLogger(({ message }) => {
+      const m = message.match(/time=(\d+):(\d+):(\d+\.?\d*)/);
+      if (!m || !recordingDuration) return;
+      const elapsed = parseInt(m[1]) * 3600 + parseInt(m[2]) * 60 + parseFloat(m[3]);
+      const pct = Math.round(Math.min(elapsed / recordingDuration, 1) * 100);
       progressFill.style.width = pct + '%';
       progressLbl.textContent = 'converting… ' + pct + '%';
     });
