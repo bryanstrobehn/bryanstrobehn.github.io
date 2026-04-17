@@ -733,6 +733,7 @@ async function saveAsMp4(baseName) {
     const fetchFile = window._fetchFile;
 
     ff.setProgress(({ ratio }) => {
+      if (ratio == null || isNaN(ratio) || ratio < 0) return;
       const pct = Math.round(Math.min(ratio, 1) * 100);
       progressFill.style.width = pct + '%';
       progressLbl.textContent = 'converting… ' + pct + '%';
