@@ -10,7 +10,6 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #0e0e0f;
     --surface: #17171a;
     --border: #2a2a30;
     --text: #e8e8ea;
@@ -37,7 +36,7 @@
     width: 100%; height: 100%;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    gap: clamp(12px, 4vh, 40px);
+    gap: clamp(10px, 3vh, 32px);
     position: relative;
   }
 
@@ -47,25 +46,18 @@
     color: var(--muted); text-transform: uppercase;
   }
 
-  /* ── Camera preview (hidden until cam mode) ── */
+  /* ── Camera preview ── */
   .cam-preview-wrap {
-    display: none;
-    position: relative;
+    display: none; position: relative;
     width: clamp(120px, 22vmin, 200px);
-    aspect-ratio: 4/3;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid var(--border);
+    aspect-ratio: 4/3; border-radius: 10px;
+    overflow: hidden; border: 1px solid var(--border);
   }
   .cam-preview-wrap.visible { display: block; }
-  .cam-preview-wrap video {
-    width: 100%; height: 100%; object-fit: cover;
-    transform: scaleX(-1);
-  }
+  .cam-preview-wrap video { width: 100%; height: 100%; object-fit: cover; }
   .cam-badge {
     position: absolute; bottom: 6px; right: 8px;
-    font-size: clamp(8px, 1vmin, 11px);
-    color: var(--muted); letter-spacing: 0.06em;
+    font-size: clamp(8px, 1vmin, 11px); color: var(--muted); letter-spacing: 0.06em;
   }
 
   /* ── Ring + button ── */
@@ -83,9 +75,9 @@
   .ring-progress {
     fill: none; stroke: var(--accent); stroke-width: 2.5;
     stroke-linecap: round; stroke-dasharray: 308; stroke-dashoffset: 308;
-    transition: stroke-dashoffset 1s linear, stroke 0.3s;
+    transition: stroke 0.3s;
   }
-  .ring-progress.done-ring { stroke: var(--green); }
+  .ring-progress.done-ring { stroke: var(--green); stroke-dashoffset: 0; }
 
   .rec-btn {
     position: relative;
@@ -108,6 +100,13 @@
     0%, 100% { box-shadow: 0 0 0 1.5vmin var(--accent-glow); }
     50%       { box-shadow: 0 0 0 3.5vmin rgba(255,59,48,0.08); }
   }
+  @keyframes spin-ring {
+    from { stroke-dashoffset: 308; }
+    to   { stroke-dashoffset: 0; }
+  }
+  .ring-progress.spinning {
+    animation: spin-ring 60s linear infinite;
+  }
 
   .rec-icon {
     width: 5vmin; height: 5vmin; background: white; border-radius: 50%;
@@ -129,7 +128,6 @@
   }
   .status.live { color: var(--accent); }
   .status.done { color: var(--green); }
-  .status.warn { color: var(--muted-hover); }
 
   .timer {
     font-size: clamp(14px, 4vmin, 52px); font-weight: 500;
@@ -140,8 +138,7 @@
   /* ── Controls tray ── */
   .controls-wrap {
     display: flex; flex-direction: column; align-items: center;
-    gap: clamp(8px, 1.5vmin, 16px);
-    transition: opacity 0.2s;
+    gap: clamp(6px, 1.2vmin, 12px); transition: opacity 0.2s;
   }
 
   .tray-toggle {
@@ -160,15 +157,28 @@
     transition: grid-template-rows 0.28s ease;
   }
   .tray.open { grid-template-rows: 1fr; }
-  .tray-inner { overflow: hidden; }
+  .tray-inner { overflow: hidden; display: flex; flex-direction: column; gap: clamp(4px, 0.8vmin, 8px); }
 
   .tray-row {
-    display: flex; align-items: center; gap: clamp(8px, 2vmin, 20px);
+    display: flex; align-items: center; gap: clamp(8px, 2vmin, 18px);
     padding: clamp(8px, 1.5vmin, 14px) clamp(12px, 2vmin, 20px);
     background: rgba(255,255,255,0.03);
     border: 1px solid var(--border);
     border-radius: 10px;
   }
+
+  /* format row has two lines */
+  .tray-row.format-row {
+    flex-direction: column; align-items: flex-start;
+    gap: clamp(6px, 1vmin, 10px);
+  }
+  .format-row-top { display: flex; align-items: center; gap: clamp(8px, 2vmin, 18px); width: 100%; }
+  .format-note {
+    font-size: clamp(8px, 1vmin, 11px); color: var(--muted);
+    letter-spacing: 0.02em; line-height: 1.5;
+  }
+  .format-note.mp4-note { display: none; }
+  .format-note.mp4-note.visible { display: block; }
 
   .pill-group {
     display: flex; gap: 2px;
@@ -203,11 +213,9 @@
     background: var(--border); flex-shrink: 0;
   }
 
-  /* mobile hint inside tray */
   .mobile-note {
     font-size: clamp(8px, 1.1vmin, 12px);
     color: var(--muted); letter-spacing: 0.03em; line-height: 1.5;
-    text-align: center;
   }
 
   /* ── Download area ── */
@@ -229,6 +237,7 @@
     font-weight: 500; letter-spacing: 0.04em; cursor: pointer; transition: opacity 0.15s;
   }
   .dl-btn:hover { opacity: 0.88; }
+  .dl-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .again-btn {
     font-size: clamp(9px, 1.2vmin, 14px); color: var(--muted);
     background: none; border: none; cursor: pointer;
@@ -236,6 +245,22 @@
     text-align: center; text-decoration: underline; padding: 0; transition: color 0.15s;
   }
   .again-btn:hover { color: var(--text); }
+
+  /* transcode progress */
+  .progress-wrap {
+    display: none; flex-direction: column; gap: 6px;
+  }
+  .progress-wrap.visible { display: flex; }
+  .progress-bar-track {
+    width: 100%; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%; width: 0%; background: var(--green);
+    border-radius: 2px; transition: width 0.2s;
+  }
+  .progress-label {
+    font-size: clamp(8px, 1vmin, 11px); color: var(--muted); letter-spacing: 0.04em;
+  }
 
   /* ── About button + drawer ── */
   .about-btn {
@@ -277,8 +302,6 @@
     line-height: 1.8; letter-spacing: 0.02em; margin-bottom: clamp(8px, 1.5vmin, 16px);
   }
   .drawer p:last-child { margin-bottom: 0; }
-  .drawer a { color: var(--muted-hover); text-decoration: underline; }
-  .drawer a:hover { color: var(--text); }
   .drawer-close {
     position: absolute; top: clamp(14px, 2.5vmin, 24px); right: clamp(16px, 3vmin, 28px);
     background: none; border: none; cursor: pointer;
@@ -293,51 +316,9 @@
 </style>
 </head>
 <body>
-<!-- ── Project Nav ── -->
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  body { padding-top: 44px; }
-  #pnav { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 1.25rem; background: #1c1c1e; border-bottom: 2px solid #2e2e32; font-family: 'Space Grotesk', system-ui, sans-serif; }
-  #pnav-back { font-size: 0.8rem; font-weight: 500; letter-spacing: 0.01em; color: #8e8e96; text-decoration: none; transition: color 0.12s; }
-  #pnav-back:hover { color: #e8e8ea; }
-  #pnav-btn { background: none; border: 1.5px solid #2e2e32; border-radius: 3px; color: #6e6e76; cursor: pointer; padding: 5px 7px; line-height: 0; transition: color 0.12s, border-color 0.12s, background 0.12s; }
-  #pnav-btn:hover, #pnav-btn.open { color: #e0e0e4; border-color: #4e4e54; background: #28282c; }
-  #pnav-pop { position: fixed; top: 48px; right: 1.25rem; background: #1c1c1e; border: 2px solid #3a3a3e; border-radius: 4px; padding: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: 272px; box-shadow: 0 12px 32px rgba(0,0,0,0.6); visibility: hidden; opacity: 0; pointer-events: none; transform: translateY(-6px); transition: opacity 0.14s, transform 0.14s; }
-  #pnav-pop.open { visibility: visible; opacity: 1; pointer-events: auto; transform: translateY(0); }
-  #pnav-pop a { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.75rem; border-radius: 3px; text-decoration: none; color: #b0b0b8; font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 0.82rem; font-weight: 500; transition: background 0.1s, color 0.1s; }
-  #pnav-pop a:hover { background: #28282c; color: #f0f0f2; }
-  #pnav-pop a.pnav-cur { background: #28282c; color: #f0f0f2; font-weight: 600; }
-</style>
-<div id="pnav">
-  <a href="index.html" id="pnav-back">← Back to Apps</a>
-  <button id="pnav-btn" aria-label="All projects">
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><circle cx="1.5" cy="1.5" r="1.5"/><circle cx="7.5" cy="1.5" r="1.5"/><circle cx="13.5" cy="1.5" r="1.5"/><circle cx="1.5" cy="7.5" r="1.5"/><circle cx="7.5" cy="7.5" r="1.5"/><circle cx="13.5" cy="7.5" r="1.5"/><circle cx="1.5" cy="13.5" r="1.5"/><circle cx="7.5" cy="13.5" r="1.5"/><circle cx="13.5" cy="13.5" r="1.5"/></svg>
-  </button>
-  <div id="pnav-pop">
-    <a href="bpm-finder.html">🎵 BPM Finder</a>
-    <a href="converter.html">🔄 Converter</a>
-    <a href="grab.html">📹 Grab</a>
-    <a href="midi-shaper.html">🎹 MIDI Shaper</a>
-    <a href="poop-tracker.html">💩 Poop Tracker</a>
-    <a href="treasure-fleet.html">🗺️ Treasure Fleet</a>
-    <a href="https://bryanstrobehn.github.io/brewlog" target="_blank">🍺 Brew Log</a>
-    <a href="viewdafile.html">📄 ViewDaFile</a>
-  </div>
-</div>
-<script>
-(function(){
-  var btn=document.getElementById('pnav-btn'),pop=document.getElementById('pnav-pop');
-  btn.addEventListener('click',function(e){e.stopPropagation();var o=pop.classList.toggle('open');btn.classList.toggle('open',o);});
-  document.addEventListener('click',function(){pop.classList.remove('open');btn.classList.remove('open');});
-  pop.addEventListener('click',function(e){e.stopPropagation();});
-  var cur=location.pathname.split('/').pop();
-  pop.querySelectorAll('a').forEach(function(a){if(decodeURIComponent(a.getAttribute('href'))===cur)a.classList.add('pnav-cur');});
-})();
-</script>
 <div class="card">
   <span class="wordmark">Grab</span>
 
-  <!-- Camera preview (visible in cam mode before/during recording) -->
   <div class="cam-preview-wrap" id="camPreviewWrap">
     <video id="camPreview" autoplay muted playsinline></video>
     <span class="cam-badge">preview</span>
@@ -348,7 +329,7 @@
       <circle class="ring-track" cx="54" cy="54" r="49"/>
       <circle class="ring-progress" id="ringProg" cx="54" cy="54" r="49"/>
     </svg>
-    <button class="rec-btn" id="recBtn" title="Start recording" onclick="handleClick()">
+    <button class="rec-btn" id="recBtn" onclick="handleClick()">
       <div class="rec-icon"></div>
       <svg class="check" viewBox="0 0 30 30"><polyline points="6,15 12,21 24,9"/></svg>
     </button>
@@ -359,26 +340,26 @@
     <div class="timer" id="timerDisp" style="opacity:0">0:00</div>
   </div>
 
-  <!-- Controls tray -->
   <div class="controls-wrap" id="controlsWrap">
-    <button class="tray-toggle" id="trayToggle" onclick="toggleTray()">
+    <button class="tray-toggle open" id="trayToggle" onclick="toggleTray()">
       options
       <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
         <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
-    <div class="tray" id="tray">
-      <div class="tray-inner">
-        <div class="tray-row" id="trayRow">
-          <!-- populated by JS based on device -->
-        </div>
+    <div class="tray open" id="tray">
+      <div class="tray-inner" id="trayInner">
+        <!-- populated by buildTray() -->
       </div>
     </div>
   </div>
 
-  <!-- Download -->
   <div class="dl-area" id="dlArea">
     <span class="dl-label">Ready to share</span>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div>
+      <span class="progress-label" id="progressLabel">converting...</span>
+    </div>
     <button class="dl-btn" id="dlBtn">↓ save recording</button>
     <button class="again-btn" onclick="reset()">record another</button>
   </div>
@@ -386,18 +367,15 @@
   <button class="about-btn" onclick="openAbout()">about</button>
 </div>
 
-<!-- About drawer -->
 <div class="drawer-overlay" id="overlay" onclick="closeAbout()"></div>
 <div class="drawer" id="drawer">
   <div class="drawer-handle"></div>
   <button class="drawer-close" onclick="closeAbout()">✕</button>
   <h2>Grab</h2>
   <p>Built out of a genuine moment of friction — needed to quickly show something on screen to friends in Signal and realized there was no tool that was just: open, click, done.</p>
-  <p>No account. No upload. No cloud. The recording stays on your machine and downloads as a <code style="color:var(--text);font-family:inherit">.webm</code> file you can drag straight into Slack, Signal, Discord, or wherever.</p>
+  <p>No account. No upload. No cloud. The recording stays on your machine and downloads as a file you can drag straight into Slack, Signal, Discord, or wherever.</p>
   <p>On mobile, screen capture isn't available — but camera recording works the same way. Same one-click flow, file lands in your downloads.</p>
-  <div class="drawer-meta">
-    screen &amp; camera · no backend · no account · open source
-  </div>
+  <div class="drawer-meta">screen &amp; camera · no backend · no account · open source</div>
 </div>
 
 <script>
@@ -406,10 +384,12 @@ const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 let mediaRecorder = null, chunks = [], stream = null, camStream = null;
 let startTime = null, timerInterval = null, blobUrl = null;
-let micEnabled = false;
-let maxSec = 30;
-let sourceMode = isMobile ? 'camera' : 'screen'; // 'screen'|'window'|'tab'|'camera'
-let camFacing = 'user'; // front cam default on mobile
+let micEnabled = false, sysAudioEnabled = false;
+let sourceMode = isMobile ? 'camera' : 'screen';
+let camFacing = 'user';
+let outputFormat = 'webm'; // 'webm' | 'mp4'
+let ffmpegLoaded = false, ffmpegLoading = false;
+let recordedBlob = null;
 
 const btn          = document.getElementById('recBtn');
 const statusEl     = document.getElementById('statusLine');
@@ -417,31 +397,26 @@ const timerEl      = document.getElementById('timerDisp');
 const ringProg     = document.getElementById('ringProg');
 const dlArea       = document.getElementById('dlArea');
 const dlBtn        = document.getElementById('dlBtn');
+const progressWrap = document.getElementById('progressWrap');
+const progressFill = document.getElementById('progressFill');
+const progressLbl  = document.getElementById('progressLabel');
 const camWrap      = document.getElementById('camPreviewWrap');
 const camPreview   = document.getElementById('camPreview');
 const controlsWrap = document.getElementById('controlsWrap');
-const trayRow      = document.getElementById('trayRow');
+const trayInner    = document.getElementById('trayInner');
 
-// ── Build tray based on device ──
+// ── Build tray ──
 function buildTray() {
-  if (isMobile) {
-    trayRow.innerHTML = `
+  const audioRow = isMobile ? `
+    <div class="tray-row">
       <span class="mobile-note">screen capture requires desktop</span>
       <div class="tray-divider"></div>
       <div class="pill-group" id="camFaceGroup">
         <button class="pill cam-active" onclick="setCamFacing('user')">front</button>
         <button class="pill" onclick="setCamFacing('environment')">rear</button>
       </div>
-      <div class="tray-divider"></div>
-      <div class="pill-group" id="durGroup">
-        <button class="pill" onclick="setDuration(15)">15s</button>
-        <button class="pill active" onclick="setDuration(30)">30s</button>
-        <button class="pill" onclick="setDuration(60)">60s</button>
-      </div>`;
-    statusEl.textContent = 'click to record camera';
-    initCamPreview();
-  } else {
-    trayRow.innerHTML = `
+    </div>` : `
+    <div class="tray-row">
       <div class="pill-group" id="sourceGroup">
         <button class="pill active" onclick="setSource('screen')">screen</button>
         <button class="pill" onclick="setSource('window')">window</button>
@@ -458,39 +433,79 @@ function buildTray() {
         </svg>
         mic
       </button>
-      <div class="tray-divider"></div>
-      <div class="pill-group" id="durGroup">
-        <button class="pill" onclick="setDuration(15)">15s</button>
-        <button class="pill active" onclick="setDuration(30)">30s</button>
-        <button class="pill" onclick="setDuration(60)">60s</button>
-      </div>`;
+      <button class="icon-btn" id="sysAudioBtn" onclick="toggleSysAudio()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        </svg>
+        sys audio
+      </button>
+    </div>`;
+
+  const formatRow = `
+    <div class="tray-row format-row">
+      <div class="format-row-top">
+        <span style="font-size:clamp(8px,1.1vmin,12px);color:var(--muted);letter-spacing:0.04em;">format</span>
+        <div class="pill-group" id="fmtGroup">
+          <button class="pill active" onclick="setFormat('webm')">webm</button>
+          <button class="pill" onclick="setFormat('mp4')">mp4</button>
+        </div>
+      </div>
+      <span class="format-note mp4-note" id="mp4Note">mp4 loads ffmpeg in-browser · long or high-res clips will take longer to save</span>
+    </div>`;
+
+  trayInner.innerHTML = audioRow + formatRow;
+
+  if (isMobile) {
+    statusEl.textContent = 'click to record camera';
+    initCamPreview();
   }
 }
 
-// ── Camera preview (cam mode) ──
+// ── Format ──
+function setFormat(fmt) {
+  outputFormat = fmt;
+  document.querySelectorAll('#fmtGroup .pill').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('mp4Note').classList.toggle('visible', fmt === 'mp4');
+  if (fmt === 'mp4' && !ffmpegLoaded && !ffmpegLoading) loadFfmpeg();
+}
+
+async function loadFfmpeg() {
+  ffmpegLoading = true;
+  const note = document.getElementById('mp4Note');
+  if (note) note.textContent = 'loading ffmpeg…';
+  try {
+    const { createFFmpeg, fetchFile } = await import('https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js');
+    window._ffmpeg = createFFmpeg({ log: false });
+    window._fetchFile = fetchFile;
+    await window._ffmpeg.load();
+    ffmpegLoaded = true;
+    if (note) note.textContent = 'mp4 ready · long or high-res clips will take longer to save';
+  } catch(e) {
+    ffmpegLoaded = false;
+    outputFormat = 'webm';
+    document.querySelectorAll('#fmtGroup .pill').forEach(p => p.classList.remove('active'));
+    document.querySelector('#fmtGroup .pill').classList.add('active');
+    if (note) { note.textContent = 'failed to load ffmpeg — falling back to webm'; note.classList.add('visible'); }
+  }
+  ffmpegLoading = false;
+}
+
+// ── Camera preview ──
 async function initCamPreview() {
   try {
     if (camStream) camStream.getTracks().forEach(t => t.stop());
-    camStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: camFacing }, audio: false
-    });
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacing }, audio: false });
     camPreview.srcObject = camStream;
-    camWrap.classList.add('visible');
-    // mirror only front cam
     camPreview.style.transform = camFacing === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
-  } catch(e) {
-    statusEl.textContent = 'camera not available.';
-  }
+    camWrap.classList.add('visible');
+  } catch(e) { statusEl.textContent = 'camera not available.'; }
 }
 
 function stopCamPreview() {
   if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
-  camPreview.srcObject = null;
-  camWrap.classList.remove('visible');
-}
-
-function stopCamPreviewSoft() {
-  // detach preview without killing the underlying tracks (used when recording starts)
   camPreview.srcObject = null;
   camWrap.classList.remove('visible');
 }
@@ -503,11 +518,8 @@ function toggleTray() {
 
 function setSource(src) {
   sourceMode = src;
-  document.querySelectorAll('#sourceGroup .pill').forEach(p => {
-    p.classList.remove('active', 'cam-active');
-  });
+  document.querySelectorAll('#sourceGroup .pill').forEach(p => p.classList.remove('active', 'cam-active'));
   event.target.classList.add(src === 'camera' ? 'cam-active' : 'active');
-
   if (src === 'camera') {
     statusEl.textContent = 'click to record camera';
     statusEl.className = 'status';
@@ -532,10 +544,10 @@ function toggleMic() {
   if (mb) mb.classList.toggle('on', micEnabled);
 }
 
-function setDuration(s) {
-  maxSec = s;
-  document.querySelectorAll('#durGroup .pill').forEach(p => p.classList.remove('active'));
-  event.target.classList.add('active');
+function toggleSysAudio() {
+  sysAudioEnabled = !sysAudioEnabled;
+  const sb = document.getElementById('sysAudioBtn');
+  if (sb) sb.classList.toggle('on', sysAudioEnabled);
 }
 
 // ── Recording ──
@@ -549,11 +561,8 @@ async function startRecording() {
 
   if (isCamera) {
     try {
-      // reuse existing preview stream — no second permission prompt
       if (!camStream) {
-        camStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: isMobile ? camFacing : 'user' }, audio: false
-        });
+        camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacing }, audio: false });
       }
       if (micEnabled) {
         try {
@@ -563,7 +572,7 @@ async function startRecording() {
       } else {
         stream = new MediaStream(camStream.getVideoTracks());
       }
-      camPreview.srcObject = null; // detach preview without stopping tracks
+      camPreview.srcObject = null;
       camWrap.classList.remove('visible');
     } catch(e) { statusEl.textContent = 'camera access denied.'; return; }
   } else {
@@ -573,11 +582,11 @@ async function startRecording() {
     else videoConstraints.displaySurface = 'monitor';
 
     try {
-      const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: videoConstraints, audio: micEnabled });
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: videoConstraints, audio: sysAudioEnabled });
       if (micEnabled) {
         try {
           const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          stream = new MediaStream([...displayStream.getTracks(), ...micStream.getAudioTracks()]);
+          stream = new MediaStream([...displayStream.getVideoTracks(), ...displayStream.getAudioTracks(), ...micStream.getAudioTracks()]);
         } catch(e) { stream = displayStream; }
       } else {
         stream = displayStream;
@@ -597,17 +606,23 @@ async function startRecording() {
   btn.classList.add('recording');
   statusEl.classList.add('live');
   timerEl.style.opacity = '1';
-  ringProg.style.strokeDashoffset = CIRCUMFERENCE;
+  // start ring spinning — slow continuous loop, no fixed endpoint
+  ringProg.style.strokeDashoffset = '308';
+  ringProg.classList.add('spinning');
   controlsWrap.style.opacity = '0.3';
   controlsWrap.style.pointerEvents = 'none';
 
   timerInterval = setInterval(() => {
     const s = Math.floor((Date.now() - startTime) / 1000);
-    timerEl.textContent = Math.floor(s/60) + ':' + String(s % 60).padStart(2, '0');
-    ringProg.style.strokeDashoffset = Math.max(0, CIRCUMFERENCE - (s / maxSec) * CIRCUMFERENCE);
-    statusEl.textContent = 'recording · ' + (maxSec - s) + 's left';
-    if (s >= maxSec) stopRecording();
+    timerEl.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    statusEl.textContent = 'recording · ' + formatElapsed(s);
   }, 250);
+}
+
+function formatElapsed(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return m > 0 ? m + 'm ' + sec + 's' : sec + 's';
 }
 
 function stopRecording() {
@@ -617,19 +632,19 @@ function stopRecording() {
   if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
 }
 
-function finalise(isCamera) {
-  const blob = new Blob(chunks, { type: 'video/webm' });
-  blobUrl = URL.createObjectURL(blob);
+async function finalise(isCamera) {
+  recordedBlob = new Blob(chunks, { type: 'video/webm' });
 
   btn.classList.remove('recording');
   btn.classList.add('done');
   statusEl.classList.remove('live');
   statusEl.classList.add('done');
   statusEl.textContent = 'done.';
-  ringProg.style.strokeDashoffset = '0';
+  ringProg.classList.remove('spinning');
   ringProg.classList.add('done-ring');
   controlsWrap.style.display = 'none';
   camWrap.classList.remove('visible');
+  dlArea.classList.add('show');
 
   const ts = new Date();
   const stamp = ts.getFullYear() + '-'
@@ -640,32 +655,81 @@ function finalise(isCamera) {
     + String(ts.getSeconds()).padStart(2,'0');
   const prefix = isCamera ? 'grab_cam_' : 'grab_scr_';
 
-  dlBtn.onclick = () => {
+  if (outputFormat === 'mp4') {
+    dlBtn.textContent = '↓ save as mp4';
+    dlBtn.onclick = () => saveAsMp4(prefix + stamp);
+  } else {
+    blobUrl = URL.createObjectURL(recordedBlob);
+    dlBtn.textContent = '↓ save recording';
+    dlBtn.onclick = () => {
+      const a = document.createElement('a');
+      a.href = blobUrl; a.download = prefix + stamp + '.webm'; a.click();
+    };
+  }
+}
+
+async function saveAsMp4(baseName) {
+  if (!ffmpegLoaded) {
+    progressWrap.classList.add('visible');
+    progressLbl.textContent = 'loading ffmpeg…';
+    await loadFfmpeg();
+    if (!ffmpegLoaded) { progressLbl.textContent = 'failed — try saving as webm'; return; }
+  }
+
+  dlBtn.disabled = true;
+  progressWrap.classList.add('visible');
+  progressFill.style.width = '0%';
+  progressLbl.textContent = 'converting…';
+
+  try {
+    const ff = window._ffmpeg;
+    const fetchFile = window._fetchFile;
+
+    ff.setProgress(({ ratio }) => {
+      const pct = Math.round(Math.min(ratio, 1) * 100);
+      progressFill.style.width = pct + '%';
+      progressLbl.textContent = 'converting… ' + pct + '%';
+    });
+
+    ff.FS('writeFile', 'input.webm', await fetchFile(recordedBlob));
+    await ff.run('-i', 'input.webm', '-c:v', 'libx264', '-preset', 'fast', '-crf', '23', '-c:a', 'aac', 'output.mp4');
+    const data = ff.FS('readFile', 'output.mp4');
+    const mp4Blob = new Blob([data.buffer], { type: 'video/mp4' });
+    const mp4Url = URL.createObjectURL(mp4Blob);
+
+    progressFill.style.width = '100%';
+    progressLbl.textContent = 'done';
+
     const a = document.createElement('a');
-    a.href = blobUrl; a.download = prefix + stamp + '.webm'; a.click();
-  };
-  dlArea.classList.add('show');
+    a.href = mp4Url; a.download = baseName + '.mp4'; a.click();
+    setTimeout(() => URL.revokeObjectURL(mp4Url), 5000);
+  } catch(e) {
+    progressLbl.textContent = 'conversion failed — try webm';
+  }
+  dlBtn.disabled = false;
 }
 
 function reset() {
   if (blobUrl) { URL.revokeObjectURL(blobUrl); blobUrl = null; }
-  chunks = [];
+  recordedBlob = null; chunks = [];
   btn.classList.remove('recording', 'done');
   statusEl.className = 'status';
   statusEl.textContent = isMobile ? 'click to record camera' : 'click to capture screen';
   timerEl.style.opacity = '0'; timerEl.textContent = '0:00';
-  ringProg.style.strokeDashoffset = CIRCUMFERENCE;
-  ringProg.classList.remove('done-ring');
+  ringProg.classList.remove('done-ring', 'spinning');
+  ringProg.style.strokeDashoffset = '308';
   dlArea.classList.remove('show');
+  progressWrap.classList.remove('visible');
+  progressFill.style.width = '0%';
+  dlBtn.disabled = false;
+  dlBtn.textContent = '↓ save recording';
   controlsWrap.style.display = '';
   controlsWrap.style.opacity = '';
   controlsWrap.style.pointerEvents = '';
   mediaRecorder = null;
-
   if (sourceMode === 'camera' || isMobile) initCamPreview();
 }
 
-// ── About drawer ──
 function openAbout() {
   document.getElementById('drawer').classList.add('open');
   document.getElementById('overlay').classList.add('open');
@@ -675,7 +739,6 @@ function closeAbout() {
   document.getElementById('overlay').classList.remove('open');
 }
 
-// ── Init ──
 buildTray();
 </script>
 </body>
