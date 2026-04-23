@@ -39,15 +39,16 @@
 
     /* ── Content ── */
     .content { overflow-y: auto; padding: 2.5rem 3rem 4rem; background: radial-gradient(ellipse 60% 40% at 80% 0%, rgba(212,114,42,0.04) 0%, transparent 70%), var(--bg); }
-    .inner { max-width: 1080px; }
+    .inner { max-width: 1400px; }
 
     /* ── Two-column layout (desktop) ── */
     .layout {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1.35fr;
       grid-template-areas:
         "header  aside"
         "feats   aside"
+        "howto   aside"
         "reqs    aside"
         "footer  aside";
       column-gap: 2.5rem;
@@ -55,18 +56,29 @@
     }
     .layout-header   { grid-area: header; padding-bottom: 2rem; }
     .layout-features { grid-area: feats;  padding-bottom: 2rem; }
+    .layout-howto    { grid-area: howto;  padding-bottom: 2rem; }
     .layout-reqs     { grid-area: reqs;   padding-bottom: 2rem; }
     .layout-footer   { grid-area: footer; }
     .layout-aside    {
       grid-area: aside;
-      align-self: stretch;
+      align-self: start;
       background: var(--bg2);
       border: 1px solid var(--border);
       border-radius: 6px;
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
     }
+
+    /* ── Aside screenshot ── */
+    .aside-screenshot { width: 100%; height: auto; display: block; }
+
+    /* ── How to ── */
+    .howto-group { margin-bottom: 1.1rem; }
+    .howto-group:last-child { margin-bottom: 0; }
+    .howto-group-label { font-family: var(--font-display); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); opacity: 0.85; margin-bottom: 0.4rem; }
+    .howto-steps { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; }
+    .howto-steps li { font-size: 0.8rem; color: var(--text-dim); display: flex; gap: 0.55rem; align-items: baseline; line-height: 1.5; }
+    .step-num { font-family: var(--font-display); font-size: 0.65rem; font-weight: 700; color: var(--text-muted); min-width: 1.1rem; flex-shrink: 0; }
+    .howto-cmd { font-family: 'Courier New', monospace; font-size: 0.72rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 3px; padding: 0.05rem 0.35rem; color: #d8e0f0; white-space: nowrap; }
 
     /* ── App header ── */
     .app-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1.25rem; }
@@ -142,8 +154,9 @@
       .layout-header   { order: 1; padding-bottom: 2rem; }
       .layout-features { order: 2; padding-bottom: 0; }
       .layout-aside    { order: 3; margin: 1.75rem 0; align-self: auto; }
-      .layout-reqs     { order: 4; padding-bottom: 1.75rem; }
-      .layout-footer   { order: 5; }
+      .layout-howto    { order: 4; padding-bottom: 0; }
+      .layout-reqs     { order: 5; padding-bottom: 1.75rem; }
+      .layout-footer   { order: 6; }
     }
 
     @media (max-width: 768px) {
@@ -210,10 +223,43 @@
           </ul>
         </div>
 
+        <!-- Left: how to use -->
+        <div class="layout-howto">
+          <div class="section-label">How to use</div>
+          <div class="howto-group">
+            <div class="howto-group-label">Prerequisites — one-time setup</div>
+            <ol class="howto-steps">
+              <li><span class="step-num">1</span><span>Install <strong>Python 3</strong> from python.org</span></li>
+              <li><span class="step-num">2</span><span>In a terminal, run <code class="howto-cmd">pip install yt-dlp</code></span></li>
+              <li><span class="step-num">3</span><span>Run <code class="howto-cmd">winget install ffmpeg</code> (or install manually and add to PATH)</span></li>
+              <li><span class="step-num">4</span><span>Clone or download the repo from GitHub</span></li>
+              <li><span class="step-num">5</span><span>Put the files somewhere - you'll open terminal from there next.</span></li>
+
+            </ol>
+          </div>
+          <div class="howto-group">
+            <div class="howto-group-label">Start the app</div>
+                      <div class="section-sub">Two options: run from terminal each time, or create a Windows shortcut.</div>
+
+            <ol class="howto-steps">
+              <li><span class="step-num">A</span><span><strong>Terminal:</strong> <code class="howto-cmd">cd</code> into the repo folder, run <code class="howto-cmd">python index.py</code>, then open <code class="howto-cmd">http://localhost:5757</code></span></li>
+              <li><span class="step-num">B</span><span><strong>Windows (no console):</strong> create a shortcut targeting <code class="howto-cmd">powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -File launch.ps1</code> — browser opens automatically, no console visible</span></li>
+            </ol>
+          </div>
+          <div class="howto-group">
+            <div class="howto-group-label">Convert a video</div>
+            <ol class="howto-steps">
+              <li><span class="step-num">1</span><span>Paste a YouTube URL — title and duration load automatically</span></li>
+              <li><span class="step-num">2</span><span>Pick <strong>MP3</strong> or <strong>WAV</strong></span></li>
+              <li><span class="step-num">3</span><span>Click <strong>Convert + Download</strong> — file saves to your browser's default download folder</span></li>
+            </ol>
+          </div>
+        </div>
+
         <!-- Left: requirements -->
         <div class="layout-reqs">
           <div class="requirements">
-            <strong>System requirements:</strong> &nbsp;Python 3 &nbsp;·&nbsp; yt-dlp &nbsp;·&nbsp; ffmpeg &nbsp;·&nbsp; Runs locally on port 5757 &nbsp;·&nbsp; Not installable as an EXE — clone and run
+            <strong>Constraints:</strong> &nbsp;Local only — server must be running on your machine &nbsp;·&nbsp; Not a hosted web app &nbsp;·&nbsp; Windows launcher included; Mac/Linux run via terminal &nbsp;·&nbsp; Temp files auto-deleted after 10 min
           </div>
         </div>
 
@@ -224,13 +270,9 @@
           </div>
         </div>
 
-        <!-- Right: placeholder -->
+        <!-- Right: screenshot -->
         <div class="layout-aside">
-          <div class="aside-placeholder">
-            <div class="aside-placeholder-icon">🎶</div>
-            <div class="aside-placeholder-label">Youtube RIPPAH</div>
-            <div class="aside-placeholder-sub">screenshot coming soon</div>
-          </div>
+          <img src="../assets/YT-rippah.png" alt="Youtube RIPPAH — app screenshot" class="aside-screenshot" />
         </div>
 
       </div>
