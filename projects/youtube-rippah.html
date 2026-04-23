@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ViewDaFile — PDF Viewer · Bryan Strobehn</title>
+  <title>Youtube RIPPAH — Local YouTube Downloader · Bryan Strobehn</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
@@ -75,12 +75,37 @@
     .app-name { font-family: var(--font-display); font-size: 2rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #fff; line-height: 1; }
     .app-tagline { font-size: 0.88rem; color: var(--text-muted); margin-top: 0.35rem; }
 
-    /* ── Download button ── */
+    /* ── CTA button ── */
     .dl-btn { background: var(--accent); color: #fff; text-decoration: none; padding: 0.75rem 1.75rem; font-family: var(--font-display); font-size: 1rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border-radius: 4px; transition: background 0.15s; flex-shrink: 0; white-space: nowrap; }
     .dl-btn:hover { background: #be641f; }
 
-    /* ── Screenshot (inside aside) ── */
-    .layout-aside img { width: 100%; display: block; flex: 1; object-fit: cover; object-position: top center; min-height: 0; }
+    /* ── Aside placeholder ── */
+    .aside-placeholder {
+      flex: 1;
+      min-height: 300px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      background: linear-gradient(135deg, #13161d 0%, #0d0f14 60%, #111520 100%);
+      border-top: 1px solid var(--border);
+    }
+    .aside-placeholder-icon { font-size: 3rem; opacity: 0.25; }
+    .aside-placeholder-label {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.12);
+    }
+    .aside-placeholder-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      opacity: 0.5;
+      letter-spacing: 0.06em;
+    }
 
     /* ── Features ── */
     .section-label { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; }
@@ -159,36 +184,36 @@
         <div class="layout-header">
           <div class="app-header">
             <div class="app-header-left">
-              <div class="app-icon">📄</div>
+              <div class="app-icon">🎶</div>
               <div>
-                <div class="app-name">ViewDaFile — PDF Viewer</div>
-                <div class="app-tagline">Windows native &nbsp;·&nbsp; Dark mode &nbsp;·&nbsp; Free</div>
+                <div class="app-name">Youtube RIPPAH</div>
+                <div class="app-tagline">Local only &nbsp;·&nbsp; Python + Flask &nbsp;·&nbsp; Free</div>
               </div>
             </div>
-            <a href="https://github.com/bryanstrobehn/pdf-viewer/releases/latest" class="dl-btn" target="_blank" rel="noopener">Download for Windows →</a>
+            <a href="https://github.com/bryanstrobehn/youtube-grabber/releases" class="dl-btn" target="_blank" rel="noopener">View on GitHub →</a>
           </div>
         </div>
 
         <!-- Left: features -->
         <div class="layout-features">
           <div class="section-label">What it does</div>
-          <div class="section-sub">Lightweight PDF viewer. No unnecessary stuff. Does enough.</div>
+          <div class="section-sub">Paste a YouTube URL, pick MP3 or WAV, get a file. Runs in your browser against a local Flask server — nothing touches the cloud.</div>
           <ul class="feature-list">
-            <li>Opens PDFs natively</li>
-            <li>Text selection and copy</li>
-            <li>Hyperlinks supported</li>
-            <li>Zoom controls</li>
-            <li>Recent files</li>
-            <li>Dark mode</li>
+            <li>Paste any YouTube URL</li>
+            <li>MP3 output</li>
+            <li>WAV output</li>
+            <li>Instant download</li>
             <li>No account needed</li>
-            <li>Fully offline, no data sent</li>
+            <li>No cloud, no tracking</li>
+            <li>Runs on localhost</li>
+            <li>Simple dark UI</li>
           </ul>
         </div>
 
         <!-- Left: requirements -->
         <div class="layout-reqs">
           <div class="requirements">
-            <strong>System requirements:</strong> &nbsp;Windows 10 or later &nbsp;·&nbsp; No installation required — runs as a portable EXE &nbsp;·&nbsp; ~10MB download &nbsp;·&nbsp; Built with Tauri + Rust + PDF.js
+            <strong>System requirements:</strong> &nbsp;Python 3 &nbsp;·&nbsp; yt-dlp &nbsp;·&nbsp; ffmpeg &nbsp;·&nbsp; Runs locally on port 5757 &nbsp;·&nbsp; Not installable as an EXE — clone and run
           </div>
         </div>
 
@@ -199,9 +224,13 @@
           </div>
         </div>
 
-        <!-- Right: screenshot -->
+        <!-- Right: placeholder -->
         <div class="layout-aside">
-          <img src="../assets/vdf-image.png" alt="ViewDaFile PDF viewer running on Windows">
+          <div class="aside-placeholder">
+            <div class="aside-placeholder-icon">🎶</div>
+            <div class="aside-placeholder-label">Youtube RIPPAH</div>
+            <div class="aside-placeholder-sub">screenshot coming soon</div>
+          </div>
         </div>
 
       </div>
@@ -211,11 +240,11 @@
   <!-- Statusbar -->
   <div class="statusbar">
     <div class="statusbar-pip"></div>
-    <span>ViewDaFile</span>
+    <span>Youtube RIPPAH</span>
     <span>·</span>
-    <span>Windows Native · Free</span>
+    <span>Local · Python + Flask · port 5757</span>
     <span>·</span>
-    <a href="https://github.com/bryanstrobehn/pdf-viewer" target="_blank" rel="noopener">github.com/bryanstrobehn/pdf-viewer</a>
+    <a href="https://github.com/bryanstrobehn/youtube-grabber" target="_blank" rel="noopener">github.com/bryanstrobehn/youtube-grabber</a>
   </div>
 
 </div><!-- /shell -->

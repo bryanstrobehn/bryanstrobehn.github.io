@@ -66,9 +66,10 @@
     /* Placeholder tiles */
     .tile.placeholder { cursor: default; pointer-events: none; }
 
-    /* Read-only tiles — hover works, but no pointer cursor and no launch link */
-    .tile.tile-readonly { cursor: default; }
+    /* Read-only tiles — no launch link */
     .tile.tile-readonly .tile-launch { display: none !important; }
+    /* Non-link readonly tiles get default cursor; anchor readonly tiles keep pointer */
+    div.tile.tile-readonly { cursor: default; }
 
     /* Image / placeholder area */
     .tile-img-wrap { width: 100%; aspect-ratio: 16/9; background: linear-gradient(135deg, #1a1e28 0%, #0f1219 100%); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; flex-shrink: 0; border-radius: 5px 5px 0 0; }
@@ -176,7 +177,6 @@
     <nav class="topbar-nav" id="launcher-topbar-nav">
       <a href="../index.html">Portfolio</a>
       <a href="#" class="active">Projects</a>
-      <a href="viewdafile.html">ViewDaFile</a>
     </nav>
     <button id="launcher-nav-toggle" aria-label="Menu"><svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor"><rect width="18" height="2" rx="1"/><rect y="6" width="18" height="2" rx="1"/><rect y="12" width="18" height="2" rx="1"/></svg></button>
   </div>
@@ -348,6 +348,23 @@
         </div>
       </a>
 
+      <!-- Youtube RIPPAH — local app, links to landing page -->
+      <a class="tile tile-readonly" href="youtube-rippah.html" data-filter="tool">
+        <div class="tile-img-wrap">
+          <span class="tile-icon">🎶</span>
+          <div class="status-badge" data-status="live">Live</div>
+        </div>
+        <div class="tile-body">
+          <div class="tile-tags">
+            <span class="tile-tag-tool">Tool</span>
+            <span class="tile-tag-flavor">Music</span>
+          </div>
+          <div class="tile-name">Youtube RIPPAH</div>
+          <div class="tile-desc">Local YouTube → MP3/WAV converter. Paste a URL, pick a format, download.</div>
+          <div class="tile-launch">Details →</div>
+        </div>
+      </a>
+
       <!-- Telemetry QA — read-only, not yet launchable -->
       <div class="tile tile-readonly" data-filter="work">
         <div class="tile-img-wrap">
@@ -384,7 +401,7 @@
     <div class="statusbar-pip"></div>
     <span>bryanstrobehn.github.io/projects</span>
     <span>·</span>
-    <span>8 live</span>
+    <span>9 live</span>
     <span>·</span>
     <span>2 in progress</span>
   </div>
