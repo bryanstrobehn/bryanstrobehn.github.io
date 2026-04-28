@@ -504,12 +504,26 @@ function buildTray() {
 }
 
 // ── Format ──
+function canRecordMp4Native() {
+  return MediaRecorder.isTypeSupported('video/mp4;codecs=avc1') || MediaRecorder.isTypeSupported('video/mp4');
+}
+
 function setFormat(fmt) {
   outputFormat = fmt;
   document.querySelectorAll('#fmtGroup .pill').forEach(p => p.classList.remove('active'));
   event.target.classList.add('active');
-  document.getElementById('mp4Note').classList.toggle('visible', fmt === 'mp4');
-  if (fmt === 'mp4' && !ffmpegLoaded && !ffmpegLoading) loadFfmpeg();
+  const note = document.getElementById('mp4Note');
+  if (fmt === 'mp4') {
+    note.classList.add('visible');
+    if (canRecordMp4Native()) {
+      note.textContent = 'mp4 · recorded natively — no conversion needed';
+    } else {
+      note.textContent = 'mp4 loads ffmpeg in-browser · long or high-res clips will take longer to save';
+      if (!ffmpegLoaded && !ffmpegLoading) loadFfmpeg();
+    }
+  } else {
+    note.classList.remove('visible');
+  }
 }
 
 async function toBlobURL(url, mimeType) {
@@ -526,7 +540,7 @@ async function loadFfmpeg() {
     if (!window.FFmpegWASM) {
       await new Promise((resolve, reject) => {
         const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js';
+        s.src = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js';
         s.onload = resolve; s.onerror = reject;
         document.head.appendChild(s);
       });
@@ -655,7 +669,12 @@ async function startRecording() {
   }
 
   chunks = [];
-  const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+  let mime;
+  if (outputFormat === 'mp4' && canRecordMp4Native()) {
+    mime = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1') ? 'video/mp4;codecs=avc1' : 'video/mp4';
+  } else {
+    mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+  }
   mediaRecorder = new MediaRecorder(stream, { mimeType: mime });
   mediaRecorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
   mediaRecorder.onstop = () => finalise(isCamera);
@@ -693,7 +712,7 @@ function stopRecording() {
 }
 
 async function finalise(isCamera) {
-  recordedBlob = new Blob(chunks, { type: 'video/webm' });
+  recordedBlob = new Blob(chunks, { type: mediaRecorder.mimeType || 'video/webm' });
   recordingDuration = startTime ? (Date.now() - startTime) / 1000 : 0;
 
   btn.classList.remove('recording');
@@ -718,7 +737,15 @@ async function finalise(isCamera) {
 
   if (outputFormat === 'mp4') {
     dlBtn.textContent = '↓ save as mp4';
-    dlBtn.onclick = () => saveAsMp4(prefix + stamp);
+    if (recordedBlob.type.startsWith('video/mp4')) {
+      blobUrl = URL.createObjectURL(recordedBlob);
+      dlBtn.onclick = () => {
+        const a = document.createElement('a');
+        a.href = blobUrl; a.download = prefix + stamp + '.mp4'; a.click();
+      };
+    } else {
+      dlBtn.onclick = () => saveAsMp4(prefix + stamp);
+    }
   } else {
     blobUrl = URL.createObjectURL(recordedBlob);
     dlBtn.textContent = '↓ save recording';
