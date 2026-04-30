@@ -423,6 +423,7 @@ const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 let mediaRecorder = null, chunks = [], stream = null, camStream = null;
 let startTime = null, timerInterval = null, blobUrl = null;
 let micEnabled = false, sysAudioEnabled = false;
+let audioCtx = null, analyser = null, animFrameId = null;
 let sourceMode = isMobile ? 'camera' : 'screen';
 let camFacing = 'user';
 let outputFormat = 'webm'; // 'webm' | 'mp4'
@@ -688,6 +689,7 @@ async function startRecording() {
   mediaRecorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
   mediaRecorder.onstop = () => finalise(isCamera);
   mediaRecorder.start(200);
+  startAudioPulse(stream);
   if (!isCamera) stream.getVideoTracks()[0].onended = () => stopRecording();
 
   startTime = Date.now();
@@ -713,8 +715,34 @@ function formatElapsed(s) {
   return m > 0 ? m + 'm ' + sec + 's' : sec + 's';
 }
 
+function startAudioPulse(mediaStream) {
+  if (!mediaStream.getAudioTracks().length) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 256;
+  analyser.smoothingTimeConstant = 0.75;
+  audioCtx.createMediaStreamSource(mediaStream).connect(analyser);
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  function tick() {
+    animFrameId = requestAnimationFrame(tick);
+    analyser.getByteTimeDomainData(data);
+    let sum = 0;
+    for (let i = 0; i < data.length; i++) { const v = (data[i] - 128) / 128; sum += v * v; }
+    const rms = Math.sqrt(sum / data.length);
+    btn.style.transform = `scale(${(1 + Math.min(rms * 0.6, 0.1)).toFixed(3)})`;
+  }
+  tick();
+}
+
+function stopAudioPulse() {
+  if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+  if (audioCtx) { audioCtx.close(); audioCtx = null; analyser = null; }
+  btn.style.transform = '';
+}
+
 function stopRecording() {
   clearInterval(timerInterval);
+  stopAudioPulse();
   if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
   if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
   if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
