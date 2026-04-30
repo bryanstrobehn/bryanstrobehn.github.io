@@ -737,15 +737,7 @@ async function finalise(isCamera) {
 
   if (outputFormat === 'mp4') {
     dlBtn.textContent = '↓ save as mp4';
-    if (recordedBlob.type.startsWith('video/mp4')) {
-      blobUrl = URL.createObjectURL(recordedBlob);
-      dlBtn.onclick = () => {
-        const a = document.createElement('a');
-        a.href = blobUrl; a.download = prefix + stamp + '.mp4'; a.click();
-      };
-    } else {
-      dlBtn.onclick = () => saveAsMp4(prefix + stamp);
-    }
+    dlBtn.onclick = () => saveAsMp4(prefix + stamp);
   } else {
     blobUrl = URL.createObjectURL(recordedBlob);
     dlBtn.textContent = '↓ save recording';
@@ -779,8 +771,13 @@ async function saveAsMp4(baseName) {
     ff.on('progress', onProgress);
 
     try {
-      await ff.writeFile('input.webm', new Uint8Array(await recordedBlob.arrayBuffer()));
-      await ff.exec(['-i', 'input.webm', '-c:v', 'libx264', '-preset', 'fast', '-crf', '23', '-c:a', 'aac', 'output.mp4']);
+      const isNativeMp4 = recordedBlob.type.startsWith('video/mp4');
+      const inputName = isNativeMp4 ? 'input.mp4' : 'input.webm';
+      await ff.writeFile(inputName, new Uint8Array(await recordedBlob.arrayBuffer()));
+      const ffArgs = isNativeMp4
+        ? ['-i', inputName, '-c:v', 'copy', '-c:a', 'aac', 'output.mp4']
+        : ['-i', inputName, '-c:v', 'libx264', '-preset', 'fast', '-crf', '23', '-c:a', 'aac', 'output.mp4'];
+      await ff.exec(ffArgs);
       const data = await ff.readFile('output.mp4');
       const mp4Blob = new Blob([data.buffer], { type: 'video/mp4' });
       const mp4Url = URL.createObjectURL(mp4Blob);
