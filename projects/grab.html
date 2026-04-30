@@ -338,10 +338,10 @@
     <a href="converter.html">🔄 Converter</a>
     <a href="grab.html">📹 Grab</a>
     <a href="midi-shaper.html">🎹 MIDI Shaper</a>
-    <a href="poop-tracker.html">💩 Poop Tracker</a>
     <a href="treasure-fleet.html">🗺️ Treasure Fleet</a>
     <a href="https://bryanstrobehn.github.io/brewlog" target="_blank">🍺 Brew Log</a>
     <a href="viewdafile.html">📄 ViewDaFile</a>
+    <a href="job-triage.html">🎯 JD Sifter</a>
   </div>
 </div>
 <script>
@@ -504,8 +504,16 @@ function buildTray() {
 }
 
 // ── Format ──
-function canRecordMp4Native() {
-  return MediaRecorder.isTypeSupported('video/mp4;codecs=avc1') || MediaRecorder.isTypeSupported('video/mp4');
+// Only consider native mp4 if the browser can record with AAC audio (not just Opus in mp4)
+function nativeMp4Mime() {
+  const candidates = [
+    'video/mp4;codecs=avc1,mp4a.40.2',
+    'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+  ];
+  for (const t of candidates) {
+    if (MediaRecorder.isTypeSupported(t)) return t;
+  }
+  return null;
 }
 
 function setFormat(fmt) {
@@ -515,7 +523,7 @@ function setFormat(fmt) {
   const note = document.getElementById('mp4Note');
   if (fmt === 'mp4') {
     note.classList.add('visible');
-    if (canRecordMp4Native()) {
+    if (nativeMp4Mime()) {
       note.textContent = 'mp4 · recorded natively — no conversion needed';
     } else {
       note.textContent = 'mp4 loads ffmpeg in-browser · long or high-res clips will take longer to save';
@@ -670,8 +678,9 @@ async function startRecording() {
 
   chunks = [];
   let mime;
-  if (outputFormat === 'mp4' && canRecordMp4Native()) {
-    mime = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1') ? 'video/mp4;codecs=avc1' : 'video/mp4';
+  const nativeMp4 = outputFormat === 'mp4' ? nativeMp4Mime() : null;
+  if (nativeMp4) {
+    mime = nativeMp4;
   } else {
     mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
   }
@@ -748,17 +757,39 @@ async function finalise(isCamera) {
   }
 }
 
+function saveAsWebm(baseName) {
+  const url = URL.createObjectURL(recordedBlob);
+  const a = document.createElement('a');
+  a.href = url; a.download = baseName + '.webm'; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
 async function saveAsMp4(baseName) {
-  if (!ffmpegLoaded) {
-    progressWrap.classList.add('visible');
-    progressLbl.textContent = 'loading ffmpeg…';
-    await loadFfmpeg();
-    if (!ffmpegLoaded) { progressLbl.textContent = 'failed — try saving as webm'; return; }
+  // If recorded natively as mp4, just download it directly
+  if (recordedBlob.type.startsWith('video/mp4')) {
+    const url = URL.createObjectURL(recordedBlob);
+    const a = document.createElement('a');
+    a.href = url; a.download = baseName + '.mp4'; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    return;
   }
 
   dlBtn.disabled = true;
   progressWrap.classList.add('visible');
   progressFill.style.width = '0%';
+
+  if (!ffmpegLoaded) {
+    progressLbl.textContent = 'loading ffmpeg…';
+    await loadFfmpeg();
+    if (!ffmpegLoaded) {
+      progressLbl.textContent = 'mp4 unavailable — saving as webm instead';
+      progressFill.style.width = '100%';
+      saveAsWebm(baseName);
+      dlBtn.disabled = false;
+      return;
+    }
+  }
+
   progressLbl.textContent = 'converting…';
 
   try {
@@ -771,13 +802,9 @@ async function saveAsMp4(baseName) {
     ff.on('progress', onProgress);
 
     try {
-      const isNativeMp4 = recordedBlob.type.startsWith('video/mp4');
-      const inputName = isNativeMp4 ? 'input.mp4' : 'input.webm';
+      const inputName = 'input.webm';
       await ff.writeFile(inputName, new Uint8Array(await recordedBlob.arrayBuffer()));
-      const ffArgs = isNativeMp4
-        ? ['-i', inputName, '-c:v', 'copy', '-c:a', 'aac', 'output.mp4']
-        : ['-i', inputName, '-c:v', 'libx264', '-preset', 'fast', '-crf', '23', '-c:a', 'aac', 'output.mp4'];
-      await ff.exec(ffArgs);
+      await ff.exec(['-i', inputName, '-c:v', 'libx264', '-preset', 'fast', '-crf', '23', '-c:a', 'aac', 'output.mp4']);
       const data = await ff.readFile('output.mp4');
       const mp4Blob = new Blob([data.buffer], { type: 'video/mp4' });
       const mp4Url = URL.createObjectURL(mp4Blob);
@@ -792,7 +819,9 @@ async function saveAsMp4(baseName) {
       ff.off('progress', onProgress);
     }
   } catch(e) {
-    progressLbl.textContent = 'conversion failed — try webm';
+    progressLbl.textContent = 'conversion failed — saving as webm instead';
+    progressFill.style.width = '100%';
+    saveAsWebm(baseName);
   }
   dlBtn.disabled = false;
 }
