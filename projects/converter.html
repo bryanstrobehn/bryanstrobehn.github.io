@@ -133,13 +133,35 @@
   .slider-row input[type=range] { flex: 1; accent-color: var(--cyan); }
   .slider-row .val { font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; color: var(--cyan); width: 64px; text-align: right; }
 
-  /* ── MP4 warning ── */
-  .mp4-warn {
-    margin-top: 0.6rem; padding: 0.6rem 0.85rem;
-    background: rgba(255,179,0,0.06); border: 1px solid rgba(255,179,0,0.35); border-radius: 2px;
-    font-family: 'Share Tech Mono', monospace; font-size: 0.72rem; color: var(--amber); line-height: 1.6;
+  /* ── Bulk list ── */
+  .bulk-list { display: flex; flex-direction: column; gap: 4px; margin-top: 1rem; }
+  .bulk-list:empty { display: none; }
+  .bulk-row {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.5rem 0.75rem; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 2px;
+    font-family: 'Share Tech Mono', monospace; font-size: 0.75rem;
   }
-  .mp4-warn strong { color: #ffd54f; }
+  .bulk-name { flex: 1; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bulk-arrow { color: var(--cyan-dim); }
+  .bulk-fmt {
+    background: var(--panel); border: 1px solid var(--border2); color: var(--cyan);
+    font-family: 'Share Tech Mono', monospace; font-size: 0.72rem;
+    padding: 0.2rem 0.4rem; border-radius: 2px; outline: none; cursor: pointer;
+  }
+  .bulk-fmt:focus { border-color: var(--cyan); }
+  .bulk-fmt:disabled { color: var(--muted); cursor: not-allowed; }
+  .bulk-status { width: 80px; text-align: right; color: var(--text-dim); letter-spacing: 0.05em; }
+  .bulk-status.converting { color: var(--amber); }
+  .bulk-status.done { color: var(--green); }
+  .bulk-status.error { color: var(--red); }
+  .bulk-dl {
+    width: 26px; text-align: center; color: var(--muted); flex-shrink: 0;
+    text-decoration: none; border: 1px solid var(--border); border-radius: 2px;
+    padding: 0.15rem 0; pointer-events: none; opacity: 0.4; transition: all 0.15s;
+  }
+  .bulk-dl.ready { color: var(--green); border-color: var(--green); pointer-events: auto; opacity: 1; }
+  .bulk-dl.ready:hover { background: rgba(0,230,118,0.12); }
 
   /* ── Progress ── */
   .progress-wrap { height: 3px; background: var(--border); border-radius: 1px; margin-bottom: 0.75rem; overflow: hidden; display: none; }
@@ -206,11 +228,10 @@
     <a href="converter.html">🔄 Converter</a>
     <a href="grab.html">📹 Grab</a>
     <a href="midi-shaper.html">🎹 MIDI Shaper</a>
+    <a href="poop-tracker.html">💩 Poop Tracker</a>
     <a href="treasure-fleet.html">🗺️ Treasure Fleet</a>
     <a href="https://bryanstrobehn.github.io/brewlog" target="_blank">🍺 Brew Log</a>
     <a href="viewdafile.html">📄 ViewDaFile</a>
-    <a href="youtube-rippah.html">🎶 Youtube RIPPAH</a>
-    <a href="job-triage.html">🎯 JD Sifter</a>
   </div>
 </div>
 <script>
@@ -255,6 +276,9 @@
     <!-- Extra options (shown per conversion) -->
     <div id="extra-opts"></div>
 
+    <!-- Bulk file list (audio batch mode) -->
+    <div id="bulk-list" class="bulk-list"></div>
+
     <div class="progress-wrap" id="prog-wrap"><div class="progress-bar" id="prog-bar"></div></div>
     <button class="btn-convert" id="btn-convert" disabled>[ EXECUTE CONVERT ]</button>
     <a class="btn-dl" id="btn-dl">[ ↓ DOWNLOAD ]</a>
@@ -282,7 +306,7 @@
       { id: 'extract',  label: 'Extract Audio',accept: '.mp4,.webm,video/mp4,video/webm', hint: 'Drop .mp4 or .webm file' },
     ],
     audio: [
-      { id: 'wav-mp3',  label: 'WAV ↔ MP3',   accept: '.wav,.mp3,audio/wav,audio/mpeg', hint: 'Drop .wav or .mp3 file' },
+      { id: 'wav-mp3',  label: 'WAV ↔ MP3',   accept: '.wav,.mp3,audio/wav,audio/mpeg', hint: 'Drop one or more .wav / .mp3 files', bulk: true },
     ],
     image: [
       { id: 'img-conv', label: 'PNG / JPG / WebP', accept: '.png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp', hint: 'Drop .png, .jpg, or .webp file' },
@@ -298,6 +322,8 @@
   var currentCat  = 'video';
   var currentConv = 'webm-gif';
   var currentFile = null;
+  var bulkMode    = false;
+  var bulkFiles   = [];     // [{ file, srcExt, target, statusEl, dlEl }]
   var ffmpegReady = false;
   var ffmpeg;
   var FFmpegLib   = window.FFmpeg;
@@ -392,8 +418,10 @@
   function selectConv(id) {
     currentConv = id;
     currentFile = null;
+    exitBulk();
     document.getElementById('fname').textContent = '';
     btnConvert.disabled = true;
+    btnConvert.textContent = '[ EXECUTE CONVERT ]';
     btnDl.classList.remove('visible');
     hideProgress();
 
@@ -405,6 +433,7 @@
     // update drop zone
     var def = getConvDef(id);
     document.getElementById('main-file').accept = def.accept;
+    document.getElementById('main-file').multiple = !!def.bulk;
     document.getElementById('dz-label').textContent = def.hint;
 
     // render extra options
@@ -441,15 +470,7 @@
 
     if (id === 'mp4-webm') {
       el.innerHTML = '<div class="options-row"><span class="options-label">Output Format</span>' +
-        '<select id="opt-vidformat"><option value="auto">Auto-detect (flip format)</option><option value="mp4">→ MP4</option><option value="webm">→ WebM</option></select></div>' +
-        '<div class="mp4-warn" id="mp4-warn"><strong>⚠ MP4 needs a full re-encode (libx264)</strong> — FFmpeg.wasm has a fixed memory cap, so 4K+ files will crash mid-conversion. ' +
-        'Workaround: set <em>Max Resolution</em> to 1080p or lower below. For true 4K→MP4, use a native app (HandBrake, ffmpeg CLI).</div>' +
-        '<div class="options-row"><span class="options-label">Max Resolution</span>' +
-        '<select id="opt-vidscale"><option value="1080">1080p (recommended)</option><option value="720">720p</option><option value="480">480p</option><option value="none">No limit (may OOM on 4K+)</option></select></div>';
-      document.getElementById('opt-vidformat').addEventListener('change', function() {
-        var warn = document.getElementById('mp4-warn');
-        warn.style.display = (this.value === 'webm') ? 'none' : '';
-      });
+        '<select id="opt-vidformat"><option value="auto">Auto-detect (flip format)</option><option value="mp4">→ MP4</option><option value="webm">→ WebM</option></select></div>';
     }
 
     if (id === 'extract') {
@@ -479,12 +500,27 @@
   var mainFile = document.getElementById('main-file');
   var mainDz   = document.getElementById('main-dz');
 
-  mainFile.addEventListener('change', function() {
-    if (mainFile.files && mainFile.files[0]) {
-      currentFile = mainFile.files[0];
-      document.getElementById('fname').textContent = '✓ ' + currentFile.name;
-      btnConvert.disabled = false;
+  function handleFiles(fileList) {
+    var files = Array.prototype.slice.call(fileList || []);
+    if (!files.length) return;
+
+    // Bulk mode: only for conversions flagged bulk, and only when >1 file given
+    var def = getConvDef(currentConv);
+    if (def.bulk && files.length > 1) {
+      enterBulk(files);
+      return;
     }
+
+    // Single-file mode (unchanged UX)
+    exitBulk();
+    currentFile = files[0];
+    document.getElementById('fname').textContent = '✓ ' + currentFile.name;
+    btnConvert.textContent = '[ EXECUTE CONVERT ]';
+    btnConvert.disabled = false;
+  }
+
+  mainFile.addEventListener('change', function() {
+    handleFiles(mainFile.files);
   });
 
   mainDz.addEventListener('dragover', function(e) { e.preventDefault(); e.stopPropagation(); mainDz.classList.add('drag-over'); });
@@ -492,18 +528,104 @@
   mainDz.addEventListener('drop', function(e) {
     e.preventDefault(); e.stopPropagation();
     mainDz.classList.remove('drag-over');
-    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if (!f) return;
-    currentFile = f;
-    mainFile._file = f;
-    document.getElementById('fname').textContent = '✓ ' + f.name;
-    btnConvert.disabled = false;
+    if (e.dataTransfer && e.dataTransfer.files) handleFiles(e.dataTransfer.files);
   });
+
+  // ─────────────────────────────────────────
+  // Bulk mode (audio batch — WAV ↔ MP3)
+  // ─────────────────────────────────────────
+  function exitBulk() {
+    bulkMode  = false;
+    bulkFiles = [];
+    var bl = document.getElementById('bulk-list');
+    if (bl) bl.innerHTML = '';
+    document.getElementById('extra-opts').style.display = '';
+  }
+
+  function flip(ext) { return ext === 'wav' ? 'mp3' : 'wav'; }
+
+  function enterBulk(files) {
+    // Keep only .wav / .mp3 (drag/drop bypasses the accept filter)
+    var accepted = files.filter(function(f) {
+      var e = f.name.split('.').pop().toLowerCase();
+      return e === 'wav' || e === 'mp3';
+    });
+    var skipped = files.length - accepted.length;
+
+    if (accepted.length < 2) {
+      // Not enough audio files for a batch — fall back to single mode
+      exitBulk();
+      if (accepted.length === 1) {
+        currentFile = accepted[0];
+        document.getElementById('fname').textContent = '✓ ' + currentFile.name;
+        btnConvert.textContent = '[ EXECUTE CONVERT ]';
+        btnConvert.disabled = false;
+      }
+      return;
+    }
+
+    bulkMode    = true;
+    currentFile = null;
+    bulkFiles   = accepted.map(function(f) {
+      var srcExt = f.name.split('.').pop().toLowerCase();
+      return { file: f, srcExt: srcExt, target: flip(srcExt), statusEl: null, dlEl: null };
+    });
+
+    document.getElementById('extra-opts').style.display = 'none';
+    document.getElementById('fname').textContent = '✓ ' + bulkFiles.length + ' files queued' +
+      (skipped ? ' (' + skipped + ' non-audio skipped)' : '');
+    btnDl.classList.remove('visible');
+    hideProgress();
+    renderBulkList();
+    btnConvert.textContent = '[ EXECUTE CONVERT (' + bulkFiles.length + ') ]';
+    btnConvert.disabled = false;
+  }
+
+  function renderBulkList() {
+    var bl = document.getElementById('bulk-list');
+    bl.innerHTML = '';
+    bulkFiles.forEach(function(item) {
+      var row = document.createElement('div'); row.className = 'bulk-row';
+
+      var name = document.createElement('span');
+      name.className = 'bulk-name'; name.textContent = item.file.name; name.title = item.file.name;
+
+      var arrow = document.createElement('span');
+      arrow.className = 'bulk-arrow'; arrow.textContent = '→';
+
+      var sel = document.createElement('select');
+      sel.className = 'bulk-fmt';
+      ['mp3', 'wav'].forEach(function(fmt) {
+        var o = document.createElement('option');
+        o.value = fmt; o.textContent = fmt.toUpperCase();
+        if (fmt === item.target) o.selected = true;
+        sel.appendChild(o);
+      });
+      sel.addEventListener('change', function() { item.target = sel.value; });
+      item.fmtEl = sel;
+
+      var status = document.createElement('span');
+      status.className = 'bulk-status'; status.textContent = 'queued';
+      item.statusEl = status;
+
+      var dl = document.createElement('a');
+      dl.className = 'bulk-dl'; dl.textContent = '↓'; dl.title = 'Download';
+      item.dlEl = dl;
+
+      row.appendChild(name);
+      row.appendChild(arrow);
+      row.appendChild(sel);
+      row.appendChild(status);
+      row.appendChild(dl);
+      bl.appendChild(row);
+    });
+  }
 
   // ─────────────────────────────────────────
   // Convert button dispatch
   // ─────────────────────────────────────────
   btnConvert.addEventListener('click', function() {
+    if (bulkMode) { clearLog(); btnDl.classList.remove('visible'); runAudioBulk(); return; }
     if (!currentFile) return;
     clearLog();
     btnDl.classList.remove('visible');
@@ -516,6 +638,17 @@
       case 'img-conv':                 runImage();     break;
       case 'json-csv':                 runData();      break;
     }
+  });
+
+  // In bulk mode the main download button triggers every ready row download
+  btnDl.addEventListener('click', function(e) {
+    if (!bulkMode) return;
+    e.preventDefault();
+    bulkFiles.forEach(function(item, k) {
+      if (item.dlEl && item.dlEl.classList.contains('ready')) {
+        setTimeout(function() { item.dlEl.click(); }, k * 300);
+      }
+    });
   });
 
   // ─────────────────────────────────────────
@@ -559,9 +692,6 @@
     var inName = 'input.' + ext;
 
     log('INPUT  : ' + currentFile.name + ' (' + (currentFile.size/1024/1024).toFixed(2) + ' MB)', 'head');
-    if (currentFile.size > 100 * 1024 * 1024) {
-      log('WARN   : Large file — GIF is memory-intensive. Reduce FPS/Scale if it crashes.', 'warn');
-    }
     log('CONFIG : ' + fps + ' fps · ' + scale + 'px wide', null);
 
     FFmpegLib.fetchFile(currentFile).then(function(data) {
@@ -602,25 +732,13 @@
     var mime    = outExt === 'mp4' ? 'video/mp4' : 'video/webm';
     var args;
 
-    var scaleSel = document.getElementById('opt-vidscale');
-    var scaleVal = scaleSel ? scaleSel.value : '1080';
-
     log('INPUT  : ' + currentFile.name + ' (' + (currentFile.size/1024/1024).toFixed(2) + ' MB)', 'head');
-    if (currentFile.size > 200 * 1024 * 1024) {
-      log('WARN   : Large file (>200 MB). 4K+ may still OOM — try a lower Max Resolution.', 'warn');
-    }
-    log('CONVERT: .' + ext + ' → .' + outExt + (scaleVal !== 'none' ? ' @ max ' + scaleVal + 'p' : ''), null);
-
-    var vfScale = scaleVal !== 'none' ? 'scale=-2:min(' + scaleVal + '\\,ih)' : null;
+    log('CONVERT: .' + ext + ' → .' + outExt, null);
 
     if (outExt === 'webm') {
-      args = ['-i', inName];
-      if (vfScale) args.push('-vf', vfScale);
-      args.push('-c:v', 'libvpx', '-crf', '10', '-b:v', '0', '-c:a', 'libvorbis', outName);
+      args = ['-i', inName, '-c:v', 'libvpx', '-crf', '10', '-b:v', '0', '-c:a', 'libvorbis', outName];
     } else {
-      args = ['-i', inName];
-      if (vfScale) args.push('-vf', vfScale);
-      args.push('-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'aac', outName);
+      args = ['-i', inName, '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac', outName];
     }
 
     ffRun(args, inName, null, outName, mime, currentFile.name.replace(/\.\w+$/, '') + '.' + outExt);
@@ -676,6 +794,88 @@
     args.push(outName);
 
     ffRun(args, inName, null, outName, mime, currentFile.name.replace(/\.\w+$/, '') + '.' + outExt);
+  }
+
+  // ─────────────────────────────────────────
+  // WAV ↔ MP3 — batch
+  // ─────────────────────────────────────────
+  function runAudioBulk() {
+    if (!needsFFmpeg()) return;
+
+    var total = bulkFiles.length;
+    var ok = 0, fail = 0;
+
+    btnConvert.disabled = true;
+    btnConvert.classList.add('processing');
+    bulkFiles.forEach(function(item) { if (item.fmtEl) item.fmtEl.disabled = true; });
+    showProgress();
+    log('BATCH  : ' + total + ' files', 'head');
+
+    function done() {
+      btnConvert.classList.remove('processing');
+      btnConvert.textContent = '[ EXECUTE CONVERT (' + total + ') ]';
+      btnConvert.disabled = false;
+      bulkFiles.forEach(function(item) { if (item.fmtEl) item.fmtEl.disabled = false; });
+      hideProgress();
+      log('BATCH DONE ✓  ' + ok + ' converted' + (fail ? ', ' + fail + ' failed' : ''), fail ? 'warn' : 'ok');
+      if (ok > 0) {
+        btnDl.textContent = '[ ↓ DOWNLOAD ALL (' + ok + ') ]';
+        btnDl.removeAttribute('href');
+        btnDl.classList.add('visible');
+      }
+    }
+
+    function next(i) {
+      if (i >= total) { done(); return; }
+      setProgress(i / total);
+      btnConvert.textContent = '[ RENDERING ' + (i + 1) + '/' + total + '... ]';
+      convertOneAudio(bulkFiles[i], i, total).then(function(success) {
+        if (success) ok++; else fail++;
+        next(i + 1);
+      });
+    }
+
+    next(0);
+  }
+
+  function convertOneAudio(item, idx, total) {
+    var outExt  = item.target;
+    var inName  = 'in_'  + idx + '.' + item.srcExt;
+    var outName = 'out_' + idx + '.' + outExt;
+    var mime    = outExt === 'mp3' ? 'audio/mpeg' : 'audio/wav';
+    var args    = ['-i', inName];
+    if (outExt === 'mp3') { args.push('-codec:a', 'libmp3lame', '-qscale:a', '2'); }
+    else                  { args.push('-codec:a', 'pcm_s16le'); }
+    args.push(outName);
+
+    item.statusEl.textContent = 'converting…';
+    item.statusEl.className = 'bulk-status converting';
+    log('[' + (idx + 1) + '/' + total + '] ' + item.file.name + ' → .' + outExt, null);
+
+    return FFmpegLib.fetchFile(item.file).then(function(data) {
+      ffmpeg.FS('writeFile', inName, data);
+      return ffmpeg.run.apply(ffmpeg, args);
+    }).then(function() {
+      var out  = ffmpeg.FS('readFile', outName);
+      var blob = new Blob([out.buffer], { type: mime });
+      var dlName = item.file.name.replace(/\.\w+$/, '') + '.' + outExt;
+      item.dlEl.href = URL.createObjectURL(blob);
+      item.dlEl.download = dlName;
+      item.dlEl.classList.add('ready');
+      item.statusEl.textContent = (blob.size / 1024 / 1024).toFixed(1) + ' MB';
+      item.statusEl.className = 'bulk-status done';
+      log('  ✓ ' + dlName, 'ok');
+      try { ffmpeg.FS('unlink', inName);  } catch(e) {}
+      try { ffmpeg.FS('unlink', outName); } catch(e) {}
+      return true;
+    }).catch(function(e) {
+      item.statusEl.textContent = 'error';
+      item.statusEl.className = 'bulk-status error';
+      log('  ✗ ' + item.file.name + ': ' + (e.message || String(e)), 'err');
+      try { ffmpeg.FS('unlink', inName);  } catch(e2) {}
+      try { ffmpeg.FS('unlink', outName); } catch(e2) {}
+      return false;
+    });
   }
 
   // ─────────────────────────────────────────
