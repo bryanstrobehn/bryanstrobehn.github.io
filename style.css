@@ -2,7 +2,7 @@
    PM Portfolio — Global Styles
    ============================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
   --navy: #2C2C2C;
@@ -14,8 +14,8 @@
   --text: #1a1a1a;
   --text-muted: #6b7280;
   --border: #DDE0E3;
-  --font-display: 'Space Grotesk', system-ui, sans-serif;
-  --font-body: 'Space Grotesk', system-ui, sans-serif;
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
   --max-width: 900px;
   --nav-height: 68px;
 }
